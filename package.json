@@ -10,7 +10,11 @@
   "scripts": {
     "start": "node index.js"
   },
-  "keywords": ["Discord", "Bot", "NodeJS"],
+  "keywords": [
+    "Discord",
+    "Bot",
+    "NodeJS"
+  ],
   "author": "LXC",
   "license": "Apache-2.0",
   "dependencies": {
@@ -18,7 +22,9 @@
     "discord.js": "^12.2.0",
     "dotenv": "^8.2.0",
     "minimist": "^1.2.5",
+    "node-osu": "^2.2.0",
     "request": "^2.88.2",
+    "request-image-size": "^2.1.0",
     "sqlite3": "^5.0.0"
   }
 }
