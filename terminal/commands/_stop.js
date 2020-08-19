@@ -8,7 +8,7 @@ module.exports = new ConsoleCommand(
     "stop",
     () => {
         Logger.info("Shutting down...");
-        process["discordClient"].destroy();
-        process["terminal"].close();
+        process["internal"]["discord"]["client"].destroy();
+        process["internal"]["terminal"].close();
     }
 )

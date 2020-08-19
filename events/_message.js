@@ -14,7 +14,7 @@ module.exports = new EventInterface("on", "message", async (...args) => {
 
     let matchPrefix = false;
     let prefix = ""
-    let prefixes = process['botPrefixes'];
+    let prefixes = process["internal"]["discord"]["bot"]["prefixes"];
     for (const p of prefixes) {
         if (msg.startsWith(p)) {
             matchPrefix = true;
@@ -29,7 +29,7 @@ module.exports = new EventInterface("on", "message", async (...args) => {
         let commandLabel = commandArgs.shift();
         let commands = commandLoader.commands;
         for (const command of commands) {
-            if (commandLabel.match(command.alias.concat([command.name]).join("|"))) {
+            if (command.alias.concat([command.name]).includes(commandLabel)) {
                 Logger.info(`[BotCommands] User ${message.author.tag} issued bot command: ${commandText}`);
                 if (command.owner && member.id !== ownerId) {
                     Logger.info("[BotCommands] Only owner can use this command");
@@ -51,11 +51,13 @@ module.exports = new EventInterface("on", "message", async (...args) => {
                     Logger.info("[BotCommands] This command require nsfw channel!");
                     return;
                 }
-                command.execute(commandLabel, commandArgs, message, member, channel);
+                await command.execute(commandLabel, commandArgs, message, member, channel);
+                Logger.info("[BotCommands] Command executed!");
                 return;
             }
         }
     } else if (channel.type === "dm" && !message.author.bot) {
+        Logger.debug(channel.id);
         imis.reply(message);
     }
 });

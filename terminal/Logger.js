@@ -29,39 +29,43 @@ const COLOR = {
     BgCyan: "\x1b[46m",
     BgWhite: "\x1b[47m"
 };
+const constLogPath = path.join(__rootdir, 'logs');
+const constLogFile = "latest.log"
 class Logger {
     constructor(logPath, logFile) {
         this.logPath = logPath.endsWith("/")?logPath:logPath+"/";
         this.logFile = logFile;
         preload(this.logPath, this.logFile);
-        this.warns = [];
-        this.errors = [];
     }
 
     info(msg) {
-        return log(msg, "INFO", this.logPath, this.logFile);
+        let logPath = this !== undefined ? this.logPath : constLogPath;
+        let logFile = this !== undefined ? this.logFile : constLogFile;
+        return log(msg, "INFO", logPath, logFile);
     }
 
     error(err) {
-        process.stats.errorCount++;
-        let logEntry = log(COLOR.FgRed+err+COLOR.Reset, COLOR.FgRed+"ERROR"+COLOR.Reset, this.logPath, this.logFile);
-        this.errors.push(logEntry);
-        return logEntry;
+        process["stats"].errorCount++;
+        let logPath = this !== undefined ? this.logPath : constLogPath;
+        let logFile = this !== undefined ? this.logFile : constLogFile;
+        return log(COLOR.FgRed + err + COLOR.Reset, COLOR.FgRed + "ERROR" + COLOR.Reset, logPath, logFile);
     }
 
     warning(warn) {
-        process.stats.warningCount++;
-        let logEntry = log(COLOR.FgYellow+warn+COLOR.Reset, COLOR.FgYellow+"WARN"+COLOR.Reset, this.logPath, this.logFile);
-        this.warns.push(logEntry);
-        return logEntry;
+        process["stats"].warningCount++;
+        let logPath = this !== undefined ? this.logPath : constLogPath;
+        let logFile = this !== undefined ? this.logFile : constLogFile;
+        return log(COLOR.FgYellow+warn+COLOR.Reset, COLOR.FgYellow+"WARN"+COLOR.Reset, logPath, logFile);
     }
 
-    debug(msg, debugEnabled=process.debugEnabled) {
-        return debugEnabled ? log(COLOR.FgBlue+msg+COLOR.Reset, COLOR.FgBlue+"DEBUG"+COLOR.Reset, this.logPath, this.logFile) : "";
+    debug(msg, debugEnabled=process["internal"]["settings"]["debug"]) {
+        let logPath = this !== undefined ? this.logPath : constLogPath;
+        let logFile = this !== undefined ? this.logFile : constLogFile;
+        return debugEnabled ? log(COLOR.FgBlue+msg+COLOR.Reset, COLOR.FgBlue+"DEBUG"+COLOR.Reset, logPath, logFile) : "";
     }
 }
 
-module.exports = new Logger(path.join(__rootdir, 'logs'), "latest.log");
+module.exports = new Logger(constLogPath, constLogFile);
 module.exports.classes = Logger;
 
 function preload(logPath, logFile) {

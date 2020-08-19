@@ -17,3 +17,16 @@ module.exports.register = async () => {
         }));
     });
 }
+
+module.exports.unload = (name="") => {
+    for (const command of this.commands) {
+        if (command.name === name) {
+            this.commands.remove(name);
+            Logger.info("[TerminalCommandsLoader] Unloaded command " + name);
+        }
+    }
+}
+
+Array.prototype.remove = (searchElement, deleteCount=1) => {
+    if (this.includes(searchElement)) this.splice(this.indexOf(searchElement), deleteCount);
+}

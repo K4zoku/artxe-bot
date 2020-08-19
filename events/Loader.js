@@ -14,7 +14,7 @@ module.exports.register = async (client) => {
             Logger.debug(`[ClientEventsLoader] Registering event ${event.name}`);
             switch (event.type) {
                 case "once":
-                    await client.once(event.name, (...args) => {
+                    await client.once(event.name, (args) => {
                         event.execute(args);
                     });
                     break;

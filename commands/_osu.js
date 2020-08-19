@@ -16,10 +16,8 @@ module.exports = new BotCommand(
                         await inso.playerInfo(commandArgs[1], 0, channel);
                         return;
                     case "beatmap":
-                        let botMsg;
                         await channel.send("**Wait a bit ＞︿＜**").then(sent => {
-                            botMsg = sent;
-                            inso.beatmap(commandArgs[1], botMsg);
+                            inso.beatmap(commandArgs[1], sent);
                         });
                         return;
                     default:
@@ -66,7 +64,7 @@ module.exports = new BotCommand(
     0,
     false,
     false,
-    ["MANAGE_MESSAGES"],
+    [],
     true,
     false
 );

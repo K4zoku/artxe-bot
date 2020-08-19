@@ -9,7 +9,7 @@ module.exports = new ConsoleCommand(
     "uptime",
     () => {
         let now = new Date();
-        let uptime = date.subtract(now, process.stats.startTime).toSeconds();
+        let uptime = date.subtract(now, process["stats"]["startTime"]).toSeconds();
         let d = ~~(uptime / (3600 * 24));
         let h = ~~(uptime % (3600 * 24) / 3600);
         let m = ~~(uptime % 3600 / 60);

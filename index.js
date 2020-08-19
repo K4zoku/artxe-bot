@@ -8,11 +8,11 @@ require('dotenv').config();
 const minimist = require('minimist');
 const Logger = require('./terminal/Logger');
 const terminal = require('./terminal');
+const {fallback, login} = require('./handler/utils');
 
 const Discord = require('discord.js');
-
-
-process["launchOptions"] = minimist(process.argv, {
+process["internal"] = {};
+process["internal"]["opts"] = minimist(process.argv, {
     alias: {
         t: "token",
         p: "prefix",
@@ -20,15 +20,18 @@ process["launchOptions"] = minimist(process.argv, {
         d: "debug"
     }
 });
+process["internal"]["settings"] = {};
+process["internal"]["settings"]["debug"] = fallback(process["internal"]["opts"]["debug"], false);
+if (process["internal"]["settings"]["debug"]) Logger.debug("Debug enabled!");
 
-process["debugEnabled"] = process["launchOptions"]["debug"] !== undefined && process["launchOptions"]["debug"];
-if (process["debugEnabled"]) Logger.debug("Debug enabled!");
-process.env.BOT_TOKEN = process["launchOptions"]["token"] !== undefined ? process["launchOptions"]["token"] : process.env.BOT_TOKEN === undefined ? "" : process.env.BOT_TOKEN;
+process["internal"]["discord"] = {};
+process["internal"]["discord"]["bot"] = {};
+process["internal"]["discord"]["bot"]["token"] = fallback(process["internal"]["opts"]["token"], process.env.BOT_TOKEN, "");
 
-process["discordClient"] = new Discord.Client();
+process["internal"]["discord"]["client"] = new Discord.Client();
 
 const events = require('./events/Loader');
-events.register(process["discordClient"])
+events.register(process["internal"]["discord"]["client"])
     .then(() => Logger.info("[DiscordClient] Registering events..."))
     .catch(Logger.error);
 
@@ -37,8 +40,11 @@ commands.register()
     .then(() => Logger.info("[DiscordClient] Registering Commands..."))
     .catch(Logger.error);
 
-process["discordClient"].login(process.env.BOT_TOKEN)
-    .then(() => Logger.info(`[DiscordClient] Logged in as ${process["discordClient"].user.tag}`))
-    .catch(Logger.error);
+process["internal"]["discord"]["bot"]["logged-in"] = false;
+if (process["internal"]["discord"]["bot"]["token"] !== "") {
+    login();
+} else {
+    Logger.warning("No token was found, please input it by type 'login {BotToken}'");
+}
 
-terminal(process["discordClient"]);
+terminal(process["internal"]["discord"]["client"]);
