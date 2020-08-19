@@ -13,18 +13,18 @@ module.exports = new EventInterface("on", "message", async (...args) => {
     const channel = message.channel;
 
     let matchPrefix = false;
-    let prefix = ""
-    let prefixes = process["internal"]["discord"]["bot"]["prefixes"];
-    for (const p of prefixes) {
-        if (msg.toLowerCase().startsWith(p.toLowerCase())) {
+    let prefixLength = 0;
+    const prefixes = process["internal"]["discord"]["bot"]["prefixes"];
+    for (const prefix of prefixes) {
+        if (msg.toLowerCase().startsWith(prefix.toLowerCase())) {
             matchPrefix = true;
-            prefix = p;
+            prefixLength = prefix.length;
             break;
         }
     }
 
     if (matchPrefix) {
-        let commandText = msg.replace(prefix, "").trimStart();
+        let commandText = msg.substr(0, prefixLength).trimStart();
         let commandArgs = commandText.split(" ");
         let commandLabel = commandArgs.shift();
         let commands = commandLoader.commands;
