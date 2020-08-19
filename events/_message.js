@@ -16,7 +16,7 @@ module.exports = new EventInterface("on", "message", async (...args) => {
     let prefix = ""
     let prefixes = process["internal"]["discord"]["bot"]["prefixes"];
     for (const p of prefixes) {
-        if (msg.startsWith(p)) {
+        if (msg.toLowerCase().startsWith(p.toLowerCase())) {
             matchPrefix = true;
             prefix = p;
             break;

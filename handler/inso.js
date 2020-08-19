@@ -120,6 +120,9 @@ module.exports = {
                 "thumbnail": {
                     "url": avatarUrl
                 },
+                "image": {
+                    "url": `http://lemmmy.pw/osusig/sig.php?colour=hexff66aa&uname=${Name}&pp=2&mode=${mode}&countryrank&flagshadow&onlineindicator=undefined&xpbar&xpbarhex`
+                },
                 "author": {
                     "name": `${Name}`,
                     "url": `https://osu.ppy.sh/users/${uid}`,

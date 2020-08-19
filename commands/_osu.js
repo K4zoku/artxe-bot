@@ -51,7 +51,7 @@ module.exports = new BotCommand(
                                 m = 3;
                                 break;
                         }
-                        await inso.playerInfo(commandArgs[1], m);
+                        await inso.playerInfo(commandArgs[1], m, channel);
                         return;
                     default:
                         return;
