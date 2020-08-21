@@ -10,9 +10,9 @@ module.exports = new BotCommand(
     "sc {ScheduleString} {command}",
     undefined,
     async (commandLabel, commandArgs, message, member, channel) => {
-        let cronExpress = commandArgs.shift().replace("`", "").split("|").join(" ");
+        let cronExpress = commandArgs.shift().replaceAll("`", "").split("|").join(" ");
         let sCommand = commandArgs.join(" ");
-        let taskId = md5(scheduleTasks.length).substr(5,10).toUpperCase();
+        let taskId = md5(scheduleTasks.length).substr(5,5).toUpperCase();
         scheduleTasks.push(taskId);
         await channel.send(`[\`${taskId}\`] Schedule command \`${sCommand}\` at ${cronExpress}`);
         schedule.scheduleJob(name, cronExpress, (fireDate) => {
