@@ -27,6 +27,6 @@ module.exports = () => {
         }
         Logger.info("mhmm, seems like the cat is walking on keyboard ¯\\_(ツ)_/¯");
     }).on('close', () => {
-        process.exit(0);
+        Logger.info("[Terminal] Closed terminal input");
     });
 }

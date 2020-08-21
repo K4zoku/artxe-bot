@@ -10,5 +10,6 @@ module.exports = new ConsoleCommand(
         Logger.info("Shutting down...");
         process["internal"]["discord"]["client"].destroy();
         process["internal"]["terminal"].close();
+        process.exit(0);
     }
 )
