@@ -31,15 +31,8 @@ module.exports = {
             result = JSON.parse(body);
             let displayCountry = country.split("");
             displayCountry = displayCountry.shift().toUpperCase() + displayCountry.join("");
-            let pngFile = renderPNG(result);
-            message.channel.send(displayCountry, {files: [pngFile]}).then().catch(Logger.error);
-            try {
-                fs.unlinkSync(pngFile);
-                Logger.debug("[sync] File deleted " + pngFile);
-            } catch {
-                Logger.error("Delete Fail, attempting to try again with async");
-                fs.unlink(pngFile, () => {Logger.debug("[async] File deleted " + pngFile)});
-            }
+            renderPNG(result, displayCountry, message);
+
         });
         return result;
     },
@@ -71,7 +64,7 @@ function createChartSVG(dataPercent, startAngle=0) {
     return describeArc(67.733345, 67.733345, 51.971222, startAngle, endAngle);
 }
 
-function renderPNG(data) {
+function renderPNG(data, displayCountry, message) {
     const infected = data["cases"];
     const recovered = data["recovered"];
     const deaths = data["deaths"];
@@ -101,8 +94,19 @@ function renderPNG(data) {
     svg2img(svgData, function(error, buffer) {
         if (error) return Logger.error(error.stack);
         pngName = fileNewName(path.join(__rootdir, ".cache"), pngName);
-        fs.writeFileSync(path.join(__rootdir, ".cache", pngName), buffer);
-        Logger.debug('File written ' + path.join(__rootdir, ".cache", pngName));
+        fs.writeFile(path.join(__rootdir, ".cache", pngName), buffer, () => {
+            Logger.debug('File written ' + path.join(__rootdir, ".cache", pngName));
+            message.channel.send(displayCountry, {files: [path.join(__rootdir, ".cache", pngName)]})
+                .then(() => {
+                    try {
+                        fs.unlinkSync(path.join(__rootdir, ".cache", pngName));
+                        Logger.debug("[sync] File deleted " + path.join(__rootdir, ".cache", pngName));
+                    } catch {
+                        Logger.error("Delete Fail, attempting to try again with async");
+                        fs.unlink(path.join(__rootdir, ".cache", pngName), () => {Logger.debug("[async] File deleted " + path.join(__rootdir, ".cache", pngName))});
+                    }
+                })
+                .catch(Logger.error);
+        });
     });
-    return path.join(__rootdir, ".cache", pngName);
 }
