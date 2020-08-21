@@ -89,7 +89,7 @@ function log(content="", logType="", logPath, logFile) {
     let current = (new Date()).toTimeString().split(' ')[0];
     logType = logType !== "" ? " " + logType : "";
     let logEntry = `[${COLOR.FgGreen}${current}${COLOR.Reset}${logType}]: ${content}`;
-    if (!process["terminal"]["closed"]) {
+    if (process["internal"]["terminal-input"]) {
         process.stdout.write("\r" + logEntry + "\n");
         process.stdout.write("\rαΓτΧε> "); // Prompt
     } else {
