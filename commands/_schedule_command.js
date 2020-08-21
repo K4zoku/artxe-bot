@@ -1,7 +1,8 @@
 const BotCommand = require('./BotCommand');
 const schedule = require('node-schedule');
 const Logger = require('../terminal/Logger');
-
+const md5 = require('md5');
+let scheduleTasks = [];
 module.exports = new BotCommand(
     "schedule_command",
     ["sc"],
@@ -9,10 +10,12 @@ module.exports = new BotCommand(
     "sc {ScheduleString} {command}",
     undefined,
     async (commandLabel, commandArgs, message, member, channel) => {
-        let cronExpress = commandArgs.shift().split("|").join(" ");
+        let cronExpress = commandArgs.shift().replace("`", "").split("|").join(" ");
         let sCommand = commandArgs.join(" ");
-        await channel.send(`Schedule command \`${sCommand}\` at ${cronExpress}`);
-        schedule.scheduleJob(cronExpress, (fireDate) => {
+        let taskId = md5(scheduleTasks.length).substr(5,10).toUpperCase();
+        scheduleTasks.push(taskId);
+        await channel.send(`[\`${taskId}\`] Schedule command \`${sCommand}\` at ${cronExpress}`);
+        schedule.scheduleJob(name, cronExpress, (fireDate) => {
             Logger.debug("Job executed: " + fireDate);
             channel.send(sCommand).then((sent) => {
                 sent.delete({timeout: 1000}).catch(Logger.error);
