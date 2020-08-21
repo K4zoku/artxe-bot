@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const zlib = require('zlib');
 const {__rootdir} = require('../root');
+const {fileNewName} = require('../handler/utils');
 const COLOR = {
     Reset: "\x1b[0m",
     Bright: "\x1b[1m",
@@ -83,30 +84,6 @@ function preload(logPath, logFile) {
         fs.unlinkSync(path.join(logPath, newName));
     }
 }
-
-function fileNewName(path, filename) {
-    let pos = filename.lastIndexOf('.log.gz');
-    let name;
-    let ext;
-    if (pos > -1) {
-        name = filename.slice(0, pos);
-        ext = filename.slice(pos, filename.length);
-    } else {
-        name = filename;
-    }
-    let newName = filename;
-    let counter = 1;
-    let newPath = path + '/' + filename;
-
-    while (fs.existsSync(newPath)) {
-        newName = name + '-' + counter + ext;
-        newPath = path + '/' + newName;
-        counter++;
-    }
-    return newName;
-}
-const readline = require('readline'),
-    rl = readline.createInterface(process.stdin, process.stdout);
 
 function log(content="", logType="", logPath, logFile) {
     let current = (new Date()).toTimeString().split(' ')[0];

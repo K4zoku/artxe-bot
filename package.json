@@ -25,6 +25,7 @@
     "node-osu": "^2.2.0",
     "request": "^2.88.2",
     "request-image-size": "^2.1.0",
-    "sqlite3": "^5.0.0"
+    "sqlite3": "^5.0.0",
+    "svg2img": "^0.8.1"
   }
 }

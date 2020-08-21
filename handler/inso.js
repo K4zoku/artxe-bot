@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const request = require('request');
 const requestImgSize = require('request-image-size');
 const osu = require('node-osu');
+const {numberWithCommas} = require("./utils");
 const osuApi = new osu.Api("f542df9a0b7efc666ac0350446f954740a88faa8", {
     notFoundAsError: true,
     completeScores: false
@@ -132,10 +133,6 @@ module.exports = {
             channel.send({embed: embed});
         });
     }
-}
-
-function numberWithCommas(x) {
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 function beatmapLinkExplode(url) {

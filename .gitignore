@@ -48,16 +48,16 @@ jspm_packages/
 # TypeScript v1 declaration files
 typings/
 
-# TypeScript cache
+# TypeScript .cache
 *.tsbuildinfo
 
-# Optional npm cache directory
+# Optional npm .cache directory
 .npm
 
-# Optional eslint cache
+# Optional eslint .cache
 .eslintcache
 
-# Microbundle cache
+# Microbundle .cache
 .rpt2_cache/
 .rts2_cache_cjs/
 .rts2_cache_es/
@@ -76,7 +76,7 @@ typings/
 .env
 .env.test
 
-# parcel-bundler cache (https://parceljs.org/)
+# parcel-bundler .cache (https://parceljs.org/)
 .cache
 
 # Next.js build output
@@ -98,7 +98,7 @@ dist
 # Serverless directories
 .serverless/
 
-# FuseBox cache
+# FuseBox .cache
 .fusebox/
 
 # DynamoDB Local files

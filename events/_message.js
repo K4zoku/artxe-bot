@@ -5,16 +5,16 @@ const imis = require("../handler/imis");
 
 const {ownerId} = require("../configurations/bot-settings.json");
 const commandLoader = require('../commands/Loader');
+const {fallback} = require("../handler/utils");
 
 module.exports = new EventInterface("on", "message", async (...args) => {
     const message = args[0][0];
     const msg = message.content;
-    const member = message.member;
+    const member = fallback(message.member, {id: undefined, permissions: {has: () => {return true;}}});
     const channel = message.channel;
-
     let matchPrefix = false;
     let prefixLength = 0;
-    const prefixes = process["internal"]["discord"]["bot"]["prefixes"];
+    let prefixes = process["internal"]["discord"]["bot"]["prefixes"];
     for (const prefix of prefixes) {
         if (msg.toLowerCase().startsWith(prefix.toLowerCase())) {
             matchPrefix = true;
@@ -24,7 +24,7 @@ module.exports = new EventInterface("on", "message", async (...args) => {
     }
 
     if (matchPrefix) {
-        let commandText = msg.substr(0, prefixLength).trimStart();
+        let commandText = msg.substr(prefixLength, msg.length).trimStart();
         let commandArgs = commandText.split(" ");
         let commandLabel = commandArgs.shift();
         let commands = commandLoader.commands;
@@ -33,31 +33,34 @@ module.exports = new EventInterface("on", "message", async (...args) => {
                 Logger.info(`[BotCommands] User ${message.author.tag} issued bot command: ${commandText}`);
                 if (command.owner && member.id !== ownerId) {
                     Logger.info("[BotCommands] Only owner can use this command");
-                    return;
+                    break;
                 }
                 if (!command.bot && message.author.bot) {
                     Logger.info("[BotCommands] Bot can't use this command");
-                    return;
+                    break;
                 }
-                if (!member.permissions.has(command.permissions)) {
-                    Logger.info("[BotCommands] This user not enough permission!");
-                    return;
+                if (member !== undefined && member !== null) {
+                    if (!member.permissions.has(command.permissions)) {
+                        Logger.info("[BotCommands] This user not enough permission!");
+                        break;
+                    }
                 }
                 if (!command.dm && channel.type === "dm") {
                     Logger.info("[BotCommands] This command can't use in Direct Message");
-                    return;
+                    break;
                 }
                 if (command.nsfw && !channel.nsfw) {
                     Logger.info("[BotCommands] This command require nsfw channel!");
-                    return;
+                    break;
                 }
                 await command.execute(commandLabel, commandArgs, message, member, channel);
                 Logger.info("[BotCommands] Command executed!");
-                return;
+                break;
             }
         }
     } else if (channel.type === "dm" && !message.author.bot) {
-        Logger.debug(channel.id);
         imis.reply(message);
+    } else if (fallback(member.id, message.author.id) !== process["internal"]["discord"]["client"].user.id) {
+        Logger.debug(`[${fallback(channel.id, fallback(message.user, {id: 'null'}).id)}] ${member.user.tag} said: ${msg}`);
     }
 });
