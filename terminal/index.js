@@ -12,6 +12,7 @@ module.exports = () => {
     let commands = commandLoader.commands;
     process["internal"]["terminal"].setPrompt('');
     process["internal"]["terminal"].prompt();
+    process["terminal"]["closed"] = false;
 
     process["internal"]["terminal"].on('line', (line) => {
         process.stdout.write("\rαΓτΧε> ");
@@ -27,6 +28,7 @@ module.exports = () => {
         }
         Logger.info("mhmm, seems like the cat is walking on keyboard ¯\\_(ツ)_/¯");
     }).on('close', () => {
+        process["terminal"]["closed"] = true;
         Logger.info("[Terminal] Closed terminal input");
     });
 }

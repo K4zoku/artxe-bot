@@ -89,10 +89,12 @@ function log(content="", logType="", logPath, logFile) {
     let current = (new Date()).toTimeString().split(' ')[0];
     logType = logType !== "" ? " " + logType : "";
     let logEntry = `[${COLOR.FgGreen}${current}${COLOR.Reset}${logType}]: ${content}`;
-    process.stdout.write("\r" + logEntry + "\n");
-    process.stdout.write("\rαΓτΧε> "); // Prompt
-    fs.appendFile(path.join(logPath, logFile), logEntry + "\n", err => {
-        if(err) console.error(err);
-    });
+    if (!process["terminal"]["closed"]) {
+        process.stdout.write("\r" + logEntry + "\n");
+        process.stdout.write("\rαΓτΧε> "); // Prompt
+    } else {
+        console.log(logEntry);
+    }
+    fs.appendFile(path.join(logPath, logFile), logEntry + "\n", () => {});
     return logEntry;
 }
