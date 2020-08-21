@@ -24,7 +24,7 @@ module.exports = new EventInterface("on", "message", async (...args) => {
     }
 
     if (matchPrefix) {
-        let commandText = msg.substr(prefixLength, msg.length).trimStart();
+        let commandText = msg.substr(prefixLength, msg.length).trim();
         let commandArgs = commandText.split(" ");
         let commandLabel = commandArgs.shift();
         let commands = commandLoader.commands;

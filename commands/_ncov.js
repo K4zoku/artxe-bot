@@ -1,6 +1,5 @@
 const BotCommand = require('./BotCommand');
 const ivoc = require("../handler/ivoc");
-const {fallback} = require("../handler/utils");
 
 module.exports = new BotCommand(
     "ncov",
@@ -9,7 +8,7 @@ module.exports = new BotCommand(
     "ncov [{CountryName}]",
     undefined,
     async (commandLabel, commandArgs, message) => {
-        const country = fallback(commandArgs.join(" "), "global");
+        const country = commandArgs.length === 0 ? "global" : commandArgs.join(" ");
         await ivoc.getData(country, message);
     },
     0,
