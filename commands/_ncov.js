@@ -14,7 +14,7 @@ module.exports = new BotCommand(
     },
     0,
     false,
-    false,
+    true,
     [],
     true,
     false
