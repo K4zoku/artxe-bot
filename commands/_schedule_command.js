@@ -10,7 +10,7 @@ module.exports = new BotCommand(
     "sc {ScheduleString} {command}",
     undefined,
     async (commandLabel, commandArgs, message, member, channel) => {
-        let cronExpress = commandArgs.shift().replaceAll("`", "").split("|").join(" ");
+        let cronExpress = commandArgs.shift().replace(/[`]/ig, "").split("|").join(" ");
         let sCommand = commandArgs.join(" ");
         let taskId = md5(scheduleTasks.length).substr(5,5).toUpperCase();
         scheduleTasks.push(taskId);
