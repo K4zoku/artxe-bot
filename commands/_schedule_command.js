@@ -12,7 +12,8 @@ module.exports = new BotCommand(
         let cronExpress = commandArgs.shift().split("|").join(" ");
         let sCommand = commandArgs.join(" ");
         await channel.send(`Schedule command \`${sCommand}\` at ${cronExpress}`);
-        schedule.scheduleJob(cronExpress, () => {
+        schedule.scheduleJob(cronExpress, (fireDate) => {
+            Logger.debug("Job executed: " + fireDate);
             channel.send(sCommand).then((sent) => {
                 sent.delete(1000).catch(Logger.error);
             }).catch(Logger.error);
