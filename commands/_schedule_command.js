@@ -15,7 +15,7 @@ module.exports = new BotCommand(
         schedule.scheduleJob(cronExpress, (fireDate) => {
             Logger.debug("Job executed: " + fireDate);
             channel.send(sCommand).then((sent) => {
-                sent.delete(1000).catch(Logger.error);
+                sent.delete({timeout: 1000}).catch(Logger.error);
             }).catch(Logger.error);
         });
     },
