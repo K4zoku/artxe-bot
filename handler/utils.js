@@ -25,14 +25,12 @@ module.exports = {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     },
 
-    fileNewName: (path, filename) => {
+    fileNewName: (path, filename, ext) => {
         const fs = require('fs');
-        let pos = filename.lastIndexOf('.log.gz');
+        let pos = filename.lastIndexOf(ext);
         let name;
-        let ext;
         if (pos > -1) {
             name = filename.slice(0, pos);
-            ext = filename.slice(pos, filename.length);
         } else {
             name = filename;
         }

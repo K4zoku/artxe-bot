@@ -93,7 +93,7 @@ function renderPNG(data, displayCountry, message) {
     let pngName = "ncov-inc.png";
     svg2img(svgData, function(error, buffer) {
         if (error) return Logger.error(error.stack);
-        pngName = fileNewName(path.join(__rootdir, ".cache"), pngName);
+        pngName = fileNewName(path.join(__rootdir, ".cache"), pngName, ".png");
         fs.writeFile(path.join(__rootdir, ".cache", pngName), buffer, () => {
             Logger.debug('File written ' + path.join(__rootdir, ".cache", pngName));
             message.channel.send(displayCountry, {files: [path.join(__rootdir, ".cache", pngName)]})

@@ -73,7 +73,7 @@ function preload(logPath, logFile) {
     if (fs.existsSync(path.join(logPath, logFile))) {
         const lastModified = fs.statSync(logPath + logFile).mtime;
         const nameFormatted = `${lastModified.getFullYear()}-${lastModified.getMonth()+1}-${lastModified.getDate()}`;
-        let newName = fileNewName(logPath, nameFormatted + ".log.gz").replace(".gz", "");
+        let newName = fileNewName(logPath, nameFormatted + ".log.gz", ".log.gz").replace(".gz", "");
         fs.renameSync(path.join(logPath, logFile), path.join(logPath, newName));
         let fileContents = fs.createReadStream(path.join(logPath, newName));
         let writeStream = fs.createWriteStream(path.join(logPath, newName + ".gz"));
