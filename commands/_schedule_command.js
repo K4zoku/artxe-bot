@@ -15,7 +15,7 @@ module.exports = new BotCommand(
         let taskId = md5(scheduleTasks.length).substr(5,5).toUpperCase();
         scheduleTasks.push(taskId);
         await channel.send(`[\`${taskId}\`] Schedule command \`${sCommand}\` at ${cronExpress}`);
-        schedule.scheduleJob(name, cronExpress, (fireDate) => {
+        schedule.scheduleJob(taskId, cronExpress, (fireDate) => {
             Logger.debug("Job executed: " + fireDate);
             channel.send(sCommand).then((sent) => {
                 sent.delete({timeout: 1000}).catch(Logger.error);
