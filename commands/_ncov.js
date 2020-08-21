@@ -9,7 +9,7 @@ module.exports = new BotCommand(
     "ncov [{CountryName}]",
     undefined,
     async (commandLabel, commandArgs, message) => {
-        const country = fallback(commandArgs[0], "global");
+        const country = fallback(commandArgs.join(" "), "global");
         await ivoc.getData(country, message);
     },
     0,

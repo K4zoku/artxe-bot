@@ -16,7 +16,7 @@ module.exports = {
               url += "/all";
         } else {
             url += "/countries/";
-            url += country;
+            url += encodeURI(country);
         }
         request({
             url: url,
