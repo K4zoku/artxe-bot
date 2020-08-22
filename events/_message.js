@@ -10,7 +10,7 @@ const {fallback} = require("../handler/utils");
 module.exports = new EventInterface("on", "message", async (...args) => {
     const message = args[0][0];
     const msg = message.content;
-    const member = fallback(message.member, {id: undefined, permissions: {has: () => {return true;}}});
+    const member = fallback(message.member, message.author);
     const channel = message.channel;
     let matchPrefix = false;
     let prefixLength = 0;
@@ -60,7 +60,5 @@ module.exports = new EventInterface("on", "message", async (...args) => {
         }
     } else if (channel.type === "dm" && !message.author.bot) {
         imis.reply(message);
-    } else if (fallback(member.id, message.author.id) !== process["internal"]["discord"]["client"].user.id) {
-        Logger.debug(`[${fallback(channel.id, fallback(message.user, {id: 'null'}).id)}] ${member.user.tag} said: ${msg}`);
     }
 });

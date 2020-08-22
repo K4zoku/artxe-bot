@@ -26,7 +26,7 @@ module.exports = {
 }
 
 function aidb(pattern, response) {
-    client.query(`create table if not exists aitb(id integer not null constraint aitb_pk primary key autoincrement, pattern text not null, response text default null)`, (err) => {
+    client.query("create table if not exists aitb(id serial not null constraint aitb_pk primary key, pattern text not null, response text default null)", (err) => {
         if (err) {
             return Logger.error(err);
         }
