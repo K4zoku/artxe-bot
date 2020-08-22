@@ -1,13 +1,15 @@
-const sqlite3 = require('sqlite3');
+const { Client } = require('pg'),
+    client = new Client({
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+            rejectUnauthorized: false
+        }
+    });
+client.connect();
+
 const Logger = require('../terminal/Logger');
 const request = require('request');
 
-let db = new sqlite3.Database("./storage/ai.db", (err) => {
-    if (err) {
-        return console.log(err);
-    }
-    Logger.info("[Storage] Ready!");
-});
 module.exports = {
     reply(message) {
         request({
@@ -24,15 +26,15 @@ module.exports = {
 }
 
 function aidb(pattern, response) {
-    db.run(`create table if not exists aitb(id integer not null constraint aitb_pk primary key autoincrement, pattern text not null, response text default null)`, (err) => {
+    client.query(`create table if not exists aitb(id integer not null constraint aitb_pk primary key autoincrement, pattern text not null, response text default null)`, (err) => {
         if (err) {
             return Logger.error(err);
         }
     });
-    db.run(`insert into aitb(pattern, response) VALUES ('${pattern}', '${response}')`, (err) => {
+    client.query(`insert into aitb(pattern, response) VALUES ('${pattern}', '${response}')`, (err) => {
         if (err) {
             return Logger.error(err);
         }
-        Logger.info(`<chat><pattern>${pattern}</pattern><reply>${response}</reply></chat>`);
+        Logger.debug(`<chat><pattern>${pattern}</pattern><reply>${response}</reply></chat>`);
     });
 }
