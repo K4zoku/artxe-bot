@@ -3,7 +3,7 @@ const EventInterface = require('./Event');
 
 const imis = require("../handler/imis");
 
-const {ownerId} = require("../configurations/bot-settings.json");
+const {owner} = require('../configurations/bot-settings.json');
 const commandLoader = require('../commands/Loader');
 const {fallback} = require("../handler/utils");
 
@@ -31,7 +31,7 @@ module.exports = new EventInterface("on", "message", async (...args) => {
         for (const command of commands) {
             if (command.alias.concat([command.name]).includes(commandLabel)) {
                 Logger.info(`[BotCommands] User ${message.author.tag} issued bot command: ${commandText}`);
-                if (command.owner && member.id !== ownerId) {
+                if (command.owner && member.id !== owner) {
                     Logger.info("[BotCommands] Only owner can use this command");
                     break;
                 }
@@ -39,7 +39,7 @@ module.exports = new EventInterface("on", "message", async (...args) => {
                     Logger.info("[BotCommands] Bot can't use this command");
                     break;
                 }
-                if (member !== undefined && member !== null) {
+                if (channel.type === "text") {
                     if (!member.permissions.has(command.permissions)) {
                         Logger.info("[BotCommands] This user not enough permission!");
                         break;
