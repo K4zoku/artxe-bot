@@ -18,7 +18,7 @@
   "author": "LXC",
   "license": "Apache-2.0",
   "dependencies": {
-    "date-and-time": "^0.14.0",
+    "date-and-time": "^0.14.2",
     "discord.js": "^12.2.0",
     "dotenv": "^8.2.0",
     "md5": "^2.3.0",
