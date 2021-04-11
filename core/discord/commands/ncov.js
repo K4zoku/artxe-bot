@@ -35,7 +35,7 @@ async function execute(args, message) {
             const embed = new MessageEmbed()
                 .setTitle(`:microbe: ${where} nCoV stats`)
                 .setColor(247707)
-                .setFooter("Updated at")
+                .setFooter("Last updated")
                 .setTimestamp(new Date(data.updated))
                 .attachFiles(attachment)
                 .setImage(`attachment://${name}`);
