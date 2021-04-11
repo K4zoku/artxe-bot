@@ -57,7 +57,7 @@ async function execute(args, message) {
 async function chat(message, text) {
     const {reply} = require(join(src, "core", "app", "simsimi", "simsimi"));
     const c = await reply(text) ?? "Wat r u saying?";
-    message.reply(`> ${message.content}\n${message.author} ${c}`);
+    message.channel.send(`> ${message.content}\n${message.author} ${c}`);
 }
 
 function toogle(message, t) {
@@ -66,9 +66,9 @@ function toogle(message, t) {
     if (!users) return;
     if (t ?? (!users.has(id) || !users.get(id))) {
         users.set(id, true);
-        message.reply("Simsimi mode: on");
+        message.channel.send("Simsimi mode: on");
     } else {
         users.set(id, false);
-        message.reply("Simsimi mode: off");
+        message.channel.send("Simsimi mode: off");
     }
 }
