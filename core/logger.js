@@ -25,7 +25,7 @@ async function archive() {
         .catch(console.error);
 }
 
-function format(log) {
+function format(log, colorize=false) {
     let level = log.level.toUpperCase();
     let color;
     switch (level) {
@@ -47,20 +47,23 @@ function format(log) {
             color = colors.fg.white;
             break;
     }
-    return `[${log.timestamp} ${colors.colorize(level, color)}]: ${log.stack ?? log.message}`
+    level = colorize ? colors.colorize(level, color) : level;
+    return `[${log.timestamp} ${level}]: ${log.stack ?? log.message}`
 }
 
 async function initLogger() {
+    const {stdin, stdout} = process;
+    const isTTY = stdin.isTTY && stdout.isTTY;            
+
     process.global.logger = winston.createLogger({
         exitOnError: false,
         format: winston.format.timestamp({format: timestampFormat}),
         transports: [
-        new winston.transports.Stream({
-                stream: process.stdout,
-                format: winston.format.printf(log => `\r${format(log)}`)
+            new winston.transports.Console({
+                format: winston.format.printf(log => (isTTY ? "\r" : "") + format(log, isTTY))
             }),
             new winston.transports.File({
-                format: winston.format.printf(log => colors.stripColor(format(log))),
+                format: winston.format.printf(log => format(log)),
                 dirname: logPath,
                 filename: logFileName
             })
