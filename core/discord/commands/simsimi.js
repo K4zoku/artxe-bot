@@ -56,8 +56,7 @@ async function execute(args, message) {
 
 async function chat(message, text) {
     const {reply} = require(join(src, "core", "app", "simsimi", "simsimi"));
-    const c = await reply(text) ?? "Wat r u saying?";
-    message.channel.send(`> ${message.content}\n${message.author} ${c}`);
+    message.channel.send(await reply(text) ?? "Wat r u saying?");
 }
 
 function toogle(message, t) {
