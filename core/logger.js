@@ -55,8 +55,9 @@ async function initLogger() {
         exitOnError: false,
         format: winston.format.timestamp({format: timestampFormat}),
         transports: [
-            new winston.transports.Console({
-                format: winston.format.printf(log => '\r' + format(log))
+        new winston.transports.Stream({
+                stream: process.stdout,
+                format: winston.format.printf(log => `\r${format(log)}`)
             }),
             new winston.transports.File({
                 format: winston.format.printf(log => colors.stripColor(format(log))),
