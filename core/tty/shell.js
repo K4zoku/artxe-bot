@@ -25,20 +25,22 @@ class Shell {
         this.rl.prompt();
     }
 
-    ask(question, callback) {
+    ask(question, onAnswered) {
         this.commandManager.getWriter().write(question);
         this.asking = true;
-        this.askCallback = callback;
+        this.onAnswered = onAnswered;
+    }
+
+    async asyncAsk(question) {
+        return await new Promise(resolve => this.ask(question, answer => resolve(answer))) 
     }
 
     handle(input) {
-        if (this.asking) {
-            this.asking = false;
-            this.askCallback(input);
-            return true;
-        }
-        if (input === "") return true;
-        return this.commandManager.execute(input);
+        if (!input) return true;
+        if (!this.asking) return this.commandManager.execute(input);
+        this.asking = false;
+        this.onAnswered(input);
+        return true;
     }
 }
 

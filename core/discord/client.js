@@ -1,11 +1,18 @@
 const {join} = require('path');
 const {Client} = require('discord.js');
-const logger = process.global.logger;
-const token = require(join(process.global.src, 'configuration', 'discord.json'))["bot-token"];
-const client = new Client();
-client.login(token).catch(e => logger.error(e));
-
-process.global.discord = {
-	token: token,
-	client: client
-}
+const {config, shell, logger} = process.global;
+module.exports = async () => {
+	const client = new Client();
+	return (async () => 
+		config.discord["bot-token"] || 
+		shell.asyncAsk("Config bot-token is empty, please input bot token here: ")
+	)()
+	.then(token => client.login(token))
+	.then(token => {
+		process.global.discord = {
+			token: token,
+			client: client
+		};
+		return client;
+	});
+};

@@ -20,5 +20,13 @@ function apply(text, placeholder, value) {
     return text.replace(get(placeholder), value);
 }
 
-module.exports.apply = (text, placeholder, value) => apply(text, placeholder, value);
+function batchApply(text, map) {
+	for (const [placeholder, value] of Object.entries(map)) text = apply(text, placeholder, value);
+  	return text;
+}
+
+module.exports = {
+	apply: apply,
+	batchApply: batchApply
+}
 

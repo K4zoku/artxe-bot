@@ -20,9 +20,9 @@ async function fileNewName(path, name, ext = "", format = f => join(f.path, `${f
       path: path,
       name: name,
       ext: ext,
-      n: 0
+      n: 1
     }
-    let fullPath;    
+    let fullPath;
     while (await fileExists(fullPath = await format(f))) f.n++;
     return fullPath;
 }

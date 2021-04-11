@@ -5,9 +5,9 @@ const {join} = require("path");
 const winston = require("winston");
 const colors = require("./tty/colors");
 
-const timestampFormat = require(join(process.global.src, "configuration", "logger.json")).timestamp;
+const timestampFormat = process.global.config.logger.timestamp;
 
-module.exports = async () => archive().then(() => initLogger()).catch(console.error);
+module.exports = async () => archive().then(() => initLogger());
 
 const logPath = join(process.global.src, "logs");
 const logFileName = "latest.log";
@@ -47,7 +47,7 @@ function format(log) {
             color = colors.fg.white;
             break;
     }
-    return `[${log.timestamp} ${colors.colorize(level, color)}] ${log.stack ?? log.message}`
+    return `[${log.timestamp} ${colors.colorize(level, color)}]: ${log.stack ?? log.message}`
 }
 
 async function initLogger() {

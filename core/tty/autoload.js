@@ -1,9 +1,9 @@
 const {join} = require("path");
-const src = process.global.src;
-const logger = process.global.logger;
+const {src, logger} = process.global;
 const CommandManager = require(join(src, "core/command/command_manager"));
 
-if (process.stdin.isTTY && process.stdout.isTTY) {
+module.exports = async () => {
+    if (!(process.stdin.isTTY && process.stdout.isTTY)) return;
     logger.info("Detected TTY, initializing shell...");
     const Shell = require(join(src, "core/tty/shell"));
     logger.info("Loading TTY commands...");
@@ -11,7 +11,7 @@ if (process.stdin.isTTY && process.stdout.isTTY) {
     ttyCM.loadCommands(join(src, "core/tty/commands"));
     logger.info("Type 'help' or '?' to show all available commands");
     const shell = new Shell(ttyCM);
-    logger.on('data', log => shell.prompt());
-    shell.listen().catch(err => logger.error(err));
+    logger.on("data", () => shell.prompt());
     process.global.shell = shell;
+    return shell.listen();
 }

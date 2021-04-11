@@ -41,11 +41,12 @@ class CommandManager {
             );
     }
 
-    execute(rawCommand) {
+    execute(rawCommand, data, validate=()=>true) {
         let args = rawCommand.split(" ");
         let label = args.length > 0 ? args.shift() : rawCommand;
         if (this.aliases.has(label)) {
-            return this.getRegistered().get(this.getAlias(label)).execute(args);
+            let command = this.getRegistered().get(this.getAlias(label));
+            return validate(command, data) ? command.execute(args, data) : false;
         } else {
             this.getWriter().write(apply(this.feedback.commandNotFound, "label", label));
             return false;
