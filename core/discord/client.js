@@ -4,7 +4,7 @@ const {config, shell, logger} = process.global;
 module.exports = async () => {
 	const client = new Client();
 	return (async () => 
-		config.discord["bot-token"] || 
+		config.discord["bot-token"] ?? 
 		shell.asyncAsk("Config bot-token is empty, please input bot token here: ")
 	)()
 	.then(token => client.login(token))

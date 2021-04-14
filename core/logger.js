@@ -27,27 +27,29 @@ async function archive() {
 
 function format(log, colorize=false) {
     let level = log.level.toUpperCase();
-    let color;
-    switch (level) {
-        case "INFO":
-            color = colors.fg.green;
-            break;
-        case "WARNING":
-        case "WARN":
-            color = colors.fg.yellow;
-            break;
-        case "CRITICAL":
-        case "ERROR":
-            color = colors.fg.red;
-            break;
-        case "DEBUG":
-            color = colors.fg.blue;
-            break;
-        default: 
-            color = colors.fg.white;
-            break;
+    if (colorize) {
+        let color;
+        switch (level) {
+            case "INFO":
+                color = colors.fg.green;
+                break;
+            case "WARNING":
+            case "WARN":
+                color = colors.fg.yellow;
+                break;
+            case "CRITICAL":
+            case "ERROR":
+                color = colors.fg.red;
+                break;
+            case "DEBUG":
+                color = colors.fg.blue;
+                break;
+            default: 
+                color = colors.fg.white;
+                break;
+        }
+        level = colors.colorize(level, color);
     }
-    level = colorize ? colors.colorize(level, color) : level;
     return `[${log.timestamp} ${level}]: ${log.stack ?? log.message}`
 }
 
@@ -55,7 +57,7 @@ async function initLogger() {
     const {stdin, stdout} = process;
     const isTTY = stdin.isTTY && stdout.isTTY;            
 
-    process.global.logger = winston.createLogger({
+    return process.global.logger = winston.createLogger({
         exitOnError: false,
         format: winston.format.timestamp({format: timestampFormat}),
         transports: [

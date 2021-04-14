@@ -5,10 +5,10 @@ const {join} = require("path");
 const {src, logger} = process.global;
 
 module.exports = async () => require("./client")()
-	.then(client => loadEvents(client)).catch(error => logger.error(error.stack));
+	.then(client => loadEvents(client));
 
 const eventDirectory = join(src, "core", "discord", "events");
-async function loadEvents(client) {
+const loadEvents => async (client) {
 	(await readdir(eventDirectory))
 		.filter(file => file.toLowerCase().endsWith(".js"))
         .map(file => join(eventDirectory, file))
