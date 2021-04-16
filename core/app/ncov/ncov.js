@@ -31,11 +31,11 @@ async function render(data) {
    	const deathsChart = createChartSVG(deathsRate);
     const activeChart = createChartSVG(activeRate, deathsRate);
     const recoveredChart = createChartSVG(recoveredRate, 100-recoveredRate);
-
 	const placeholders = {
 		cx: cx,
 		cy: cy,
 		r: r,
+		country: (data.countryInfo && data.countryInfo.iso2.toLowerCase()) ?? "global",
 		recovered: recovered.toLocaleString(),
 		infected: cases.toLocaleString(),
 		active: active.toLocaleString(),
@@ -44,7 +44,7 @@ async function render(data) {
 		recoveredChart: recoveredChart,
 		deathsChart: deathsChart
 	}
-	const svg = batchApply(await readFile(join(__dirname, "chart.svg"), "utf-8"), placeholders);
+	const svg = batchApply(await readFile(join(__dirname, "full.svg"), "utf-8"), placeholders);
     return s2i(svg); // return buffer
 }
 
