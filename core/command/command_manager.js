@@ -7,14 +7,18 @@ const CommandFeedback = require("./command_feedback");
 const {apply} = require("../placeholder");
 
 class CommandManager {
+    #registered;
+    #aliases;
+    #writer;
+    #feedback;
     constructor(opts = {
         writer: new Writer(s => process.global.logger.info(s)),
         feedback: new CommandFeedback()
     }) {
-        this.registered = new CIM();
-        this.aliases = new CIM();
-        this.writer = opts.writer;
-        this.feedback = opts.feedback;
+        this.#registered = new CIM();
+        this.#aliases = new CIM();
+        this.#writer = opts.writer;
+        this.#feedback = opts.feedback;
     }
 
     /**
@@ -24,14 +28,14 @@ class CommandManager {
     register(command) {
         command.setCommandManager(this);
         const label = command.label;
-        this.registered.set(label, command);
-        this.aliases.set(label, label);
-        command.aliases.forEach(alias => this.aliases.set(alias, label));
+        this.#registered.set(label, command);
+        this.#aliases.set(label, label);
+        command.aliases.forEach(alias => this.#aliases.set(alias, label));
         // TODO: fix duplicate command label or alias
     }
 
     loadCommands(directory) {
-        fsp.readdir(directory)
+        return fsp.readdir(directory)
             .then(files =>
                 files.filter(file => file.toLowerCase().endsWith(".js"))
                     .map(file => join(directory, file))
@@ -44,25 +48,33 @@ class CommandManager {
     execute(rawCommand, data, validate=()=>true) {
         let args = rawCommand.split(" ");
         let label = args.length > 0 ? args.shift() : rawCommand;
-        if (this.aliases.has(label)) {
-            let command = this.getRegistered().get(this.getAlias(label));
+        if (this.hasCommand(label)) {
+            const command = this.getCommand(label);
             return validate(command, data) ? command.execute(args, data) : false;
         } else {
-            this.getWriter().write(apply(this.feedback.commandNotFound, "label", label));
+            this.#writer.write(apply(this.#feedback.commandNotFound, "label", label));
             return false;
         }
     }
 
     getWriter() {
-        return this.writer;
+        return this.#writer;
     }
 
     getRegistered() {
-        return this.registered;
+        return Array.from(this.#registered.values());
     }
 
     getAlias(label) {
-        return this.aliases.get(label);
+        return this.#aliases.get(label);
+    }
+
+    hasCommand(labelOrAlias) {
+        return this.#aliases.has(labelOrAlias);
+    }
+
+    getCommand(labelOrAlias) {
+        return this.#registered.get(this.#aliases.get(labelOrAlias));
     }
 }
 

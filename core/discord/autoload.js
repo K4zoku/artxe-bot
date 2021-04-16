@@ -26,7 +26,8 @@ const loadCommands = async () => {
     const discordCM = new CommandManager({
     	writer: (content, message) => message.channel.send(content)
     });
-    discordCM.loadCommands(join(src, "core", "discord", "commands"));
+    discordCM.loadCommands(join(src, "core", "discord", "commands"))
+        .catch(error => logger.error(error.stack));
     process.global.discord.command = {
     	manager: discordCM
     }

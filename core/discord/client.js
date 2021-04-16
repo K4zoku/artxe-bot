@@ -6,7 +6,7 @@ module.exports = async () => {
 	return (async () => 
 		config.discord["bot-token"] || 
 		process.env.token ||
-		shell.asyncAsk("bot-token is empty, please input bot token here: ")
+		(shell && shell.asyncAsk("bot-token is empty, please input bot token here: "))
 	)()
 	.then(token => client.login(token))
 	.then(token => {

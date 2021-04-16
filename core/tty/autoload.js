@@ -8,7 +8,8 @@ module.exports = async () => {
     const Shell = require(join(src, "core/tty/shell"));
     logger.info("Loading TTY commands...");
     const ttyCM = new CommandManager();
-    ttyCM.loadCommands(join(src, "core/tty/commands"));
+    ttyCM.loadCommands(join(src, "core/tty/commands"))
+        .catch(error => logger.error(error.stack));
     logger.info("Type 'help' or '?' to show all available commands");
     const shell = new Shell(ttyCM);
     logger.on("data", () => shell.prompt());

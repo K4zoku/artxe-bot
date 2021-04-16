@@ -29,12 +29,14 @@ async function execute(args, message) {
         .then(async data => {
             if (!data) return false;
             const where = data.country ?? "Global";
+            const flag = (data.countryInfo && data.countryInfo.flag) ?? 
+                "https://via.placeholder.com/250x167.png?text=GLOBAL"; // default flag
             const buffer = await render(data);
             const name = `ncov-stats-${where.toLowerCase()}.png`;
             const attachment = new MessageAttachment(buffer, name);
             const embed = new MessageEmbed()
-                .setTitle(`:microbe: ${where} nCoV stats`)
                 .setColor(247707)
+                .setAuthor(`${where} nCoV statitics`, flag)
                 .setFooter("Last updated")
                 .setTimestamp(new Date(data.updated))
                 .attachFiles(attachment)

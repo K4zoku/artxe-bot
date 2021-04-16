@@ -11,23 +11,38 @@ const help = new Command({
 function execute(args) {
     const cm = help.getCommandManager();
     const {write} = cm.getWriter();
-    const registered = cm.getRegistered();
     switch (args.length) {
         case 0:
-            write("All available commands: ");
-            Array.from(registered.values())
-                .map(command => `${command.usage} - ${command.description}`)
-                .forEach(write);
+            write(
+                [
+                    "",
+                    "All available commands: ",
+                    cm.getRegistered()
+                        .map(cmd => `  ${cmd.label} - ${cmd.description}`)
+                ]
+                .flat()
+                .join("\n")
+            );
             return true;
         case 1:
-            if (registered.has(args[0])) {
-                let command = registered.get(args[0]);
-                write(`${command.label}\nAliases: [${command.aliases.join(", ")}]\nDescription: ${command.description}\nUsage: ${command.usage}`);
-                return true;
+            if (!cm.hasCommand(args[0])) {
+                write(`No help available for '${args[0]}'`);
+                return false;
             }
-            write(`No help available for '${args[0]}'`);
-            return false;
+            const command = cm.getCommand(args[0]);
+            write(
+                [
+                    "",
+                    command.label,
+                    `Aliases: [${command.aliases.join(", ") ?? " "}]`,
+                    `Description: ${command.description}`,
+                    `Usage: ${command.usage}`
+                ]
+                .join("\n")
+            );
+            return true;
         default:
+            write(`Usage: ${help.usage}`);
             return false;
     }
 }
