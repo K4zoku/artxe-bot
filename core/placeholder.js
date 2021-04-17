@@ -10,7 +10,7 @@ function escape(pattern) {
 function get(placeholder) {
     placeholder = escape(placeholder);
     if (map.has(placeholder)) return map.get(placeholder);
-    const pattern = new RegExp(`[{]${placeholder}[}]`);
+    const pattern = new RegExp(`[{]${placeholder}[}]`, "ig");
     map.set(placeholder, pattern);
     return pattern;
 }
@@ -21,7 +21,8 @@ function apply(text, placeholder, value) {
 }
 
 function batchApply(text, map) {
-	for (const [placeholder, value] of Object.entries(map)) text = apply(text, placeholder, value);
+	for (const [placeholder, value] of Object.entries(map)) 
+        text = apply(text, placeholder, value);
   	return text;
 }
 

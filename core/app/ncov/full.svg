@@ -2,7 +2,7 @@
   <defs>
     <style type="text/css">
       <![CDATA[               
-        .k2d {
+        .k2d, .k2d > tspan {
           text-rendering: geometricPrecision;
           font-family: 'K2D Medium', sans-serif;
         }
@@ -44,10 +44,7 @@
           stroke-width: .1;
         }
 
-        #{country} {
-          fill: #970c0c; 
-          stroke-width: .3;
-        }
+        
       ]]>
       
     </style>
@@ -109,10 +106,7 @@
   
   <g id="main-data">
     <g id="chart">
-      <circle id="chart-bg" cx="{cx}" cy="{cy}" r="{r}" fill="#a0a0a0" stroke="#ffffff" stroke-width="1"/>
-      <path d="{activeChart}" fill="#970c0c"/>
-      <path d="{recoveredChart}" fill="#00a5e8"/>
-      <path d="{deathsChart}" fill="#000000"/>
+      
       <g id="total">
         <circle id="total-circle" cx="68" cy="68" r="24" fill="#6e7983" stroke="#ffffff" stroke-width="0.5"/>
         <text id="total-text" x="67.733513" y="65.249619" style="font-size:8px;font-family:'K2D Bold', sans-serif;text-align:center;text-anchor:middle;fill:#ffffff">
@@ -127,7 +121,7 @@
         </text>
       </g>
     </g>
-    <g id="data">
+    <g id="statitics">
       <text id="active-cases" x="46" y="153.5" style="font-size:5.33333px;font-family:K2D, sans-serif;fill:#ffffff">
         <tspan x="46" y="153.5" style="font-size:5.33333px;font-family:K2D, sans-serif;fill:#ffffff">
           {active}

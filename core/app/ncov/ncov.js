@@ -1,22 +1,28 @@
 const {join} = require("path");
 const {batchApply} = require(join(process.global.src, "core", "placeholder"));
 const {readFile} = require("fs").promises;
-const getJSON = require("bent")("json");
-const {promisify} = require("util");
-const svg2img = require("svg2img");
-const s2i = promisify(svg2img);
-
-
+const fetch = require("node-fetch");
+const s2i = require("util").promisify(require("svg2img"));
 
 module.exports = {
 	render: render,
-	getData: async country => getJSON(`https://disease.sh/v3/covid-19/${country ? "countries/" + country : "all"}`)
+	getData: getData
+}
+
+const API_URL = "https://disease.sh/v3/covid-19/";
+async function getData(country) {
+	const reqPath = country ? "countries/" + country : "all"
+	return (await fetch(API_URL + reqPath)).json();
 }
 
 const cx = 68;
 const cy = 68;
 const r = 52;
-
+const rt = 24;
+const colors = {
+	blank: "#6e7983",
+	active: "#970c0c",
+};
 async function render(data) {
 	let {cases, deaths, active, recovered} = data;
 	cases = cases ?? 0;
@@ -31,21 +37,29 @@ async function render(data) {
    	const deathsChart = createChartSVG(deathsRate);
     const activeChart = createChartSVG(activeRate, deathsRate);
     const recoveredChart = createChartSVG(recoveredRate, 100-recoveredRate);
+    const isGlobal = !data.country;
+    const country = (!isGlobal && data.countryInfo.iso2.toLowerCase()) ?? "global";
+    const mapColor = isGlobal ? colors.active : colors.blank;
 	const placeholders = {
 		cx: cx,
 		cy: cy,
 		r: r,
-		country: (data.countryInfo && data.countryInfo.iso2.toLowerCase()) ?? "global",
+		country: country,
+		mapcolor: mapColor,
 		recovered: recovered.toLocaleString(),
 		infected: cases.toLocaleString(),
 		active: active.toLocaleString(),
 		deaths: deaths.toLocaleString(),
-		activeChart: activeChart,
-		recoveredChart: recoveredChart,
-		deathsChart: deathsChart
+		activechart: activeChart,
+		recoveredchart: recoveredChart,
+		deathschart: deathsChart
 	}
-	const svg = batchApply(await readFile(join(__dirname, "full.svg"), "utf-8"), placeholders);
-    return s2i(svg); // return buffer
+	const fileContent = await readFile(join(__dirname, "optimized.svg"), "utf-8");
+	const svg = batchApply(fileContent, placeholders);
+    return s2i(svg, {
+    	width: 1790,
+    	height: 768
+    }); // return buffer
 }
 
 const p2a = p => (p % 100) * 3.6;
