@@ -7,7 +7,7 @@ const {URL} = require("url");
 let api = process.env.osu_api && new Api(process.env.osu_api);
 const mirror = process.env.HEROKU_URL + "osu/download/{id}?noVideo={n}";
 module.exports = {
-	download: async (bmsid, noVideo=true) => fetch(batchApply(mirror, {bmsid: +bmsid, n: noVideo ? 1 : 0})),
+	download: async (id, noVideo=true) => fetch(batchApply(mirror, {id: +id, n: noVideo ? 1 : 0})),
 	api: api,
 	getMode: getMode,
 	player: player,

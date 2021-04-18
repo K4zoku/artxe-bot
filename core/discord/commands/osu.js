@@ -1,7 +1,7 @@
 const {src} = process.global;
 const {join} = require("path");
 const Command = require(join(src, "core", "command", "command"));
-const {MessageEmbed} = require("discord.js");
+const {MessageAttachment, MessageEmbed} = require("discord.js");
 const osu = require(join(src, "core", "app", "osu", "osu"));
 const {logger} = process.global;
 
@@ -61,14 +61,18 @@ async function execute(args, message) {
                 case "mirror":
                 case "m":
                     channel.send("Getting beatmap...");
-                    let d = await osu.download(args[1]);
+                    let id = Number.isInteger(+args[1]) ? args[1] : osu.parseLink(args[1]).beatmap_id;
+                    let d = await osu.download(id);
                     if (d.status != 200) {
                         channel.send((await d.json()).message);
                         return false;
                     }
-                    size = (+d.headers.get("content-length"))/1048576; // to Mb
+                    let size = (+d.headers.get("content-length"))/1048576; // to Mb
+                    const pattern = /filename\*?=['"]?(?:UTF-\d['"]*)?([^;\r\n"']*)['"]?;?/i;
+                    let name = d.headers.get("content-disposition").match(pattern)[1];
+                    name = decodeURI(name);
                     if (size > 8) channel.send(d.url);
-                    else channel.send(await d.buffer());
+                    else channel.send("Your beatmap here", new MessageAttachment(await d.buffer(), name));
                     return true;
             }
         case 3: 
