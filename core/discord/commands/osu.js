@@ -71,8 +71,8 @@ async function execute(args, message) {
                     const pattern = /filename\*?=['"]?(?:UTF-\d['"]*)?([^;\r\n"']*)['"]?;?/i;
                     let name = d.headers.get("content-disposition").match(pattern)[1];
                     name = decodeURI(name);
-                    if (size > 8) channel.send(d.url);
-                    else channel.send("Your beatmap here", new MessageAttachment(await d.buffer(), name));
+                    channel.send(d.url);
+                    size < 8 && channel.send("Attachment", new MessageAttachment(await d.buffer(), name));
                     return true;
             }
         case 3: 
