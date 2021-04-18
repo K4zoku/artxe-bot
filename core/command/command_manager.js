@@ -52,7 +52,7 @@ class CommandManager {
             const command = this.getCommand(label);
             return validate(command, data) ? command.execute(args, data) : false;
         } else {
-            this.#writer.write(apply(this.#feedback.commandNotFound, "label", label));
+            this.#feedback && this.#writer.write(apply(this.#feedback.commandNotFound, "label", label));
             return false;
         }
     }

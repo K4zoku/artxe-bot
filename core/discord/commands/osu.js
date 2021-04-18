@@ -39,7 +39,7 @@ async function execute(args, message) {
             if (args.length > 2) {
                 return true;
             }
-            channel.send(osuCmd.usage);
+            channel.send(`**Usage:** \`${osuCmd.usage}\``);
             return false;
         case 2:
             switch (args[0].toLowerCase()) {
@@ -50,34 +50,53 @@ async function execute(args, message) {
                 case "p":
                 case "user":
                 case "u":
-                    channel.send(await playerInfo(args[1]));
-                    return true;
+                    let pinfo = await playerInfo(args[1]);
+                    channel.send(pinfo ? pinfo : "ERROR");
+                    return !!pinfo;
                 case "beatmap":
                 case "bm":
-
+                    let binfo = await beatmapInfo(args[1]);
+                    channel.send(binfo ? binfo : "ERROR");
+                    return !!binfo;
+                case "mirror":
+                case "m":
+                    channel.send("Getting beatmap...");
+                    let d = await osu.download(args[1]);
+                    if (d.status != 200) {
+                        channel.send((await d.json()).message);
+                        return false;
+                    }
+                    size = (+d.headers.get("content-length"))/1048576; // to Mb
+                    if (size > 8) channel.send(d.url);
+                    else channel.send(await d.buffer());
                     return true;
             }
         case 3: 
             switch (args[0].toLowerCase()) {
                 default:
-                    channel.send(osuCmd.usage);
+                    channel.send(`**Usage:** \`${osuCmd.usage}\``);
                     return false;
                 case "player":
                 case "p":
+                case "profile":
                 case "user":
                 case "u":
-                    channel.send(await playerInfo(args[1], args[2]));
-                    return true;
+                    let pinfo = await playerInfo(args[1], args[2]);
+                    channel.send(pinfo ? pinfo : "ERROR");
+                    return !!pinfo;
                 case "beatmap":
                 case "bm":
-
-                    return true;
+                case "b":
+                    let binfo = await beatmapInfo(args[1], args[2]);
+                    channel.send(binfo ? binfo : "ERROR");
+                    return !!binfo;
             }
     }
 }
 
 async function playerInfo(player, mode=0) {
     let p = (await osu.player(player, mode));
+    if (!p) return null;
     let description = [
         `**User**: ${p.username} (ID: ${p.id})`,
         `**Joined Osu!:** ${p.join_date}`,
@@ -106,4 +125,36 @@ async function playerInfo(player, mode=0) {
         .setImage(img)
         .setAuthor(p.username, p.avatar, `https://osu.ppy.sh/users/${p.id}`)
         .setFooter(`Mode: ${p.mode_text}`)
+}
+
+async function beatmapInfo(b, mode) {
+    b = (await osu.beatmap(b, mode));
+    if (!b) return null;
+    let description = [
+        `**Beatmap:** [Link](https://osu.ppy.sh/b/${b.beatmap_id})`,
+        `**Title:** ${b.title}`,
+        `**Origin Title:** ${b.source}`,
+        `**Artist**: ${b.artist}`,
+        `**Creator:** ${b.creator}`,
+        `**BPM:** ${b.bpm}`,
+        `**Approval Status:** ${b.status}`,
+        `**User Rating:** ${b.rating}`,
+        "",
+        `**Version:** ${b.version}`,
+        `**Circle size (CS): ** ${b.cs}`,
+        `**Drain (HP):** ${b.hp}`,
+        `**Overall (OD)**: ${b.od}`,
+        `**Approach rate (AR):** ${b.ar}`,
+        `**Star difficulty:** ${b.stars}⭐`
+    ].join("\n");
+    return new MessageEmbed()
+        .setColor(0xff66aa)
+        .setDescription(description)
+        .setThumbnail(b.thumbnail)
+        .setImage(b.cover)
+        .setFooter(b.hash)
+}
+
+async function beatmapMirror(b) {
+
 }

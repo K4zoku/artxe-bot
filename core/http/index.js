@@ -6,23 +6,31 @@ const {join} = require("path");
 const {getType} = require("mime");
 const root = join(__dirname, "../..");
 
-(async () => {
+module.exports = async logger => {
 	const server = createServer((request, response) => 
-		onRequest(request, response)
+		onRequest(logger, request, response)
 		.catch(err => {
-			console.error(err);
+			logger.error(err.stack);
 			response.writeHead(500);
 			response.end();
 		})
 	);
 	let port = process.env.PORT || 42783;
 	server.listen(port);
-	console.log("Listening on port " + port);
-})().catch(console.error);
+	logger.info("Listening on port " + port);
+}
 
 const exists = async file => access(file).then(() => true).catch(() => false)
 
-const onRequest = async (request, response) => {
+const sep = "_".repeat(20);
+
+let routes = {
+	"^osu": osu,
+}
+
+const onRequest = async (logger, request, response) => {
+	logger.info(sep);
+	logger.info(getClientIP(request));
 	let r = {
 		status: 200,
 		encoding: "utf-8",
@@ -30,12 +38,21 @@ const onRequest = async (request, response) => {
 		content: ""
 	}
 
-	if (request.url.toLowerCase().startsWith("/osu")) {
-		osu(request, response);
-		return;
-	}
-
 	do {
+		let u = request.url.substr(1);
+		let fn = false;
+		for (const [match, rfn] of Object.entries(routes)) {
+			if (u.match(match)) {
+				fn = rfn;
+				break;
+			}
+		}
+
+		if (fn) {
+			r = await fn(request);
+			break;
+		}
+
 		let realPath = join(root, request.url);
 		if (!(await exists(realPath))) {
 			r.status = 404;
@@ -64,16 +81,19 @@ const onRequest = async (request, response) => {
 			}
 		} catch (error) {
 			r.status = 500;
-			console.error(error);
-			break;
+			logger.error(error);
 		}
 	} while (0);
 	response.writeHead(r.status, r.headers);
-	console.log(`${getClientIP(request)} | ${request.url} >> ${r.status}`);
+	logger.info(r.status);
+	logger.info(sep);
 	response.end(r.content, r.encoding);
 }
 
-async function osu(request, response) {
+const NodeCache = require("node-cache");
+const cache = new NodeCache({stdTTL: 60*5});
+
+async function osu(request) {
 	let r = {
 		status: 200,
 		encoding: "utf-8",
@@ -81,7 +101,8 @@ async function osu(request, response) {
 		content: ""
 	}
 	let url = parse(request.url.toLowerCase(), true);
-	let args = url.pathname.substr("/osu/".length).split("/");
+	let k = url.pathname.substr("/osu/".length);
+	let args = k.split("/");
 	do {
 		if (args.length !== 2 && args[0] !== "download") {
 			r.status = 404;
@@ -93,36 +114,36 @@ async function osu(request, response) {
 			break;
 		}
 
+		if (cache.has(k)) {
+			r = cache.get(k);
+			break;
+		}
+
 		const {batchApply} = require(join(__dirname, "../placeholder"));
 		const fetch = require("node-fetch");
 
 		let noVideo = bool(url.query.novideo);
+		let id = +args[1];
 		let dl = "https://api.chimu.moe/v1/download/{id}?n={n}";
-		dl = batchApply(dl, {id: +args[1], n: noVideo ? 1 : 0});
+		dl = batchApply(dl, {id: id, n: noVideo ? 1 : 0});
 		let res = await fetch(dl);
-
 		r.headers["content-type"] = res.headers.get("content-type");
-		if (res.status !== 200) {
-			r.status = res.status;
-			let j = await res.json();
-			r.content = JSON.stringify({
-				code: j.code,
-				message: j.message,
-			});
+		if (res.status === 200) {
+			r.headers["content-length"] = res.headers.get("content-length");
+			r.headers["content-disposition"] = res.headers.get("content-disposition");
+			r.content = await res.buffer();
 			break;
 		}
-		r.headers["content-length"] = res.headers.get("content-length");
-		r.headers["content-disposition"] = res.headers.get("content-disposition");
 
-		response.writeHead(r.status, r.headers);
-		res.body.pipe(response);
-		return;
+		r.status = res.status;
+		res = await res.json();
+		r.content = JSON.stringify({
+			code: res.code,
+			message: res.message,
+		});
 	} while(0);
-	
-	response.writeHead(r.status, r.headers);
-	console.log(`${getClientIP(request)} | ${request.url} >> ${r.status}`);
-	response.end(r.content, r.encoding);
-	
+	!cache.has(k) && cache.set(k, r);
+	return r;
 }
 
 const bool = (v) => v == "" || v == 1 || v == true;

@@ -22,7 +22,7 @@ async function execute(args, message) {
         case 0:
             channel.send(
             	new MessageEmbed()
-	            	.setColor(3029503)
+	            	.setColor(0x2E39FF)
 	            	.setTitle("**All available commands:**")
 	            	.setDescription(
 	            		cm.getRegistered()
@@ -38,7 +38,7 @@ async function execute(args, message) {
             }
             const command = cm.getCommand(args[0]);
             channel.send(new MessageEmbed()
-            	.setColor(3029503)
+            	.setColor(0x2E39FF)
             	.setTitle(`Showing help for \`${command.label}\``)
             	.setDescription(
             		[

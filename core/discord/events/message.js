@@ -27,8 +27,7 @@ async function commandListener(message) {
     if (!content.startsWith(prefix)) return false;
     logger.info(`User ${message.author.tag} issued bot command: ${content}`);
     let rawCommand = content.substr(prefix.length);
-    const {manager} = process.global.discord.command;
-    manager.execute(rawCommand, message, validate);
+    process.global.discord.command.manager.execute(rawCommand, message, validate);
     logger.info("Command executed!");
     return true;
 }
