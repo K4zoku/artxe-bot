@@ -61,7 +61,7 @@ async function execute(args, message) {
                 case "mirror":
                 case "m":
                     channel.send("Getting beatmap...");
-                    let id = Number.isInteger(+args[1]) ? args[1] : osu.parseLink(args[1]).beatmap_id;
+                    let id = Number.isInteger(+args[1]) ? args[1] : osu.parseLink(args[1]).beatmapset_id;
                     let d = await osu.download(id);
                     if (d.status != 200) {
                         channel.send((await d.json()).message);

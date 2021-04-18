@@ -82,14 +82,14 @@ function parseLink(url) {
 			if (url.hash) {
 				let [mode, bm_id] = url.hash.substr(1).split("/");
 				return {
-					beatmapsets_id: id,
+					beatmapset_id: id,
 					beatmap_id: bm_id,
 					mode: mode
 				};
 			}
 		case "s":
 			return {
-				beatmapsets_id: id
+				beatmapset_id: id
 			};
 		default:
 			return null;
