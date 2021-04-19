@@ -34,6 +34,7 @@ function beatmapLinkExplode(url) {
 
 async function execute(args, message) {
     const {channel} = message;
+    if (args[0].toLowerCase() === "")
     switch (args.length) {
         default: 
             if (args.length > 2) {
@@ -44,10 +45,11 @@ async function execute(args, message) {
         case 2:
             switch (args[0].toLowerCase()) {
                 default:
-                    channel.send(osuCmd.usage);
+                    channel.send(`**Usage:** \`${osuCmd.usage}\``);
                     return false;
                 case "player":
                 case "p":
+                case "profile":
                 case "user":
                 case "u":
                     let pinfo = await playerInfo(args[1]);
