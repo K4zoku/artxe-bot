@@ -1,7 +1,7 @@
 const {join} = require("path");
 
 module.exports = async () => {
-    if (!(process.stdin.isTTY && process.stdout.isTTY)) return;
+    if (!(process.stdin.isTTY && process.stdout.isTTY)) return global.shell = false;
     Logger.info("Detected TTY, initializing shell...");
     Logger.info("Loading TTY commands...");
     const ttyCM = new CommandManager();

@@ -8,7 +8,7 @@ const osuCmd = new Command({
     label: "osu",
     aliases: ["oxu", "o"],
     description: "Osu!Command",
-    usage: "osu <user|u|beatmap|bm> <id> [beatmap|user opts...]",
+    usage: "osu <user|beatmap|mirror>",
     execute: execute,
     data: {
         modifier: 0x6,
@@ -18,27 +18,35 @@ const osuCmd = new Command({
 
 module.exports = osuCmd;
 
-function beatmapLinkExplode(url) {
-    url = url.replace("https://", "").replace("http://", "");
-    let split_level1 = url.split("/")[2];
-    return {
-        bms_id: split_level1.split("#")[0],
-        bm_id: url.split("/")[3],
-        mode: split_level1.split("#")[1]
-    }
-}
-
 async function execute(args, message) {
     const {channel} = message;
     switch (args.length) {
-        default: 
-            if (args.length > 2) {
-                return true;
-            }
-            channel.send(`**Usage:** \`${osuCmd.usage}\``);
+        case 0:
+            await channel.send(`**Usage:** \`${osuCmd.usage}\``);
             return false;
+        case 1:
+            switch (args.shift().toLowerCase()) {
+                case "profile":
+                case "player":
+                case "p":
+                case "user":
+                case "u":
+                    await channel.send("**Usage:** `osu user <name> [--mode <mode>]`");
+                    return false;
+                case "beatmap":
+                case "bm":
+                case "b":
+                    await channel.send("**Usage:** `osu beatmap <id or link> [mode]`");
+                    return false;
+                case "mirror":
+                case "m":
+                    await channel.send("**Usage:** `osu mirror <id or link>`");
+                    return false;
+                default:
+                    return false;
+            }
         case 2:
-            switch (args[0].toLowerCase()) {
+            switch (args.shift().toLowerCase()) {
                 default:
                     channel.send(`**Usage:** \`${osuCmd.usage}\``);
                     return false;
@@ -47,51 +55,63 @@ async function execute(args, message) {
                 case "profile":
                 case "user":
                 case "u":
-                    let pinfo = await playerInfo(args[1]);
-                    channel.send(pinfo ? pinfo : "ERROR");
+                    let pinfo = await playerInfo(args[0]);
+                    await channel.send(pinfo);
                     return !!pinfo;
                 case "beatmap":
                 case "bm":
-                    let binfo = await beatmapInfo(args[1]);
-                    channel.send(binfo ? binfo : "ERROR");
+                case "b":
+                    let binfo = await beatmapInfo(args[0]);
+                    await channel.send(binfo);
                     return !!binfo;
                 case "mirror":
                 case "m":
-                    await channel.send("Getting beatmap...");
-                    let id = Number.isInteger(+args[1]) ? args[1] : osu.parseLink(args[1]).beatmapset_id;
+                    channel.send("Getting beatmap...");
+                    let id = Number.isInteger(+args[0]) ? args[0] : osu.parseLink(args[0]).beatmapset_id;
                     let d = await osu.download(id);
                     if (d.status != 200) {
                         channel.send((await d.json()).message);
                         return false;
                     }
-                    await channel.send(d.url);
-                    let size = (+d.headers.get("content-length"))/1048576; // to Mb
+                    channel.send(d.url);
+                    let size = (+d.headers.get("content-length")) / 1048576; // to Mb
                     if (size > 8) return true;
                     const pattern = /filename\*?=['"]?(?:UTF-\d['"]*)?([^;\r\n"']*)['"]?;?/i;
                     let name = d.headers.get("content-disposition").match(pattern)[1];
                     name = decodeURI(name);
-                    await channel.send("Attachment", new MessageAttachment(await d.buffer(), name));
+                    channel.send("Attachment", new MessageAttachment(await d.buffer(), name));
                     return true;
             }
-        case 3: 
-            switch (args[0].toLowerCase()) {
-                default:
-                    channel.send(`**Usage:** \`${osuCmd.usage}\``);
-                    return false;
+        default:
+            switch (args.shift().toLowerCase()) {
+                case "profile":
                 case "player":
                 case "p":
-                case "profile":
                 case "user":
                 case "u":
-                    let pinfo = await playerInfo(args[1], args[2]);
-                    channel.send(pinfo ? pinfo : "ERROR");
+                    let mode = 0;
+                    let pname;
+                    for (let i = 0; i < args.length; i++) {
+                        if (args[i] === "--mode" || args[i] === "-m") {
+                            pname = args.slice(0, i).join(" ");
+                            console.log(pname);
+                            mode = args.slice(i + 1).join(" ");
+                            break;
+                        }
+                    }
+                    let pinfo = await playerInfo(pname, mode);
+                    await channel.send(pinfo);
                     return !!pinfo;
                 case "beatmap":
                 case "bm":
                 case "b":
-                    let binfo = await beatmapInfo(args[1], args[2]);
-                    channel.send(binfo ? binfo : "ERROR");
+                    if (args.length !== 2) return false;
+                    let binfo = await beatmapInfo(args[0], args[1]);
+                    await channel.send(binfo);
                     return !!binfo;
+                default:
+                    await channel.send(`**Usage:** \`${osuCmd.usage}\``);
+                    return false;
             }
     }
 }
@@ -119,7 +139,7 @@ async function playerInfo(player, mode=0) {
         `**S plays:** ${p.s}`,
         `**A plays:** ${p.a}`
     ].join("\n");
-    let img = `http://lemmmy.pw/osusig/sig.php?colour=hexff66aa&uname=${p.username}&pp=2&mode=${p.mode_id}&countryrank&flagshadow&onlineindicator=undefined&xpbar&xpbarhex`;
+    let img = `https://lemmmy.pw/osusig/sig.php?colour=hexff66aa&uname=${encodeURI(p.username)}&pp=2&mode=${p.mode_id}&countryrank&flagshadow&onlineindicator=undefined&xpbar&xpbarhex`;
     return new MessageEmbed()
         .setColor(0xff66aa)
         .setDescription(description)
@@ -155,8 +175,4 @@ async function beatmapInfo(b, mode) {
         .setThumbnail(b.thumbnail)
         .setImage(b.cover)
         .setFooter(b.hash)
-}
-
-async function beatmapMirror(b) {
-
 }

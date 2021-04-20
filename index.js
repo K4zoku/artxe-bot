@@ -24,7 +24,7 @@ async function walk(dir) {
 		logger: require("./configuration/logger.json"),
 		tty: require("./configuration/tty.json"),
 	}
-
+	__("util/placeholder");
 	let files = await walk(path.join(__src, "struct"));
 	files.map(require).forEach(_class => global[_class.name] = _class);
 })()

@@ -49,7 +49,13 @@ class CommandManager {
         let label = args.length > 0 ? args.shift() : rawCommand;
         if (this.hasCommand(label)) {
             const command = this.getCommand(label);
-            return validate(command, data) ? command.execute(args, data) : false;
+            return validate(command, data) ?
+                command.execute(args, data)
+                    .catch(e => {
+                        error(e);
+                        this.#writer.write("An error occurred");
+                    }) :
+                false;
         } else {
             this.#feedback && this.#writer.write(placeholder(this.#feedback.commandNotFound, "label", label));
             return false;

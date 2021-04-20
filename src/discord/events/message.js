@@ -23,7 +23,7 @@ async function simsimiListener(message) {
     const users = discord.simsimi.users;
     const id = message.author.id;
     if (!(users.has(id) && users.get(id))) return;
-    const {reply} = __("app/simsimi/simsimi");
+    const {reply} = __("app/simsimi");
     const sim = await reply(message.content);
     message.reply(sim ?? "Wat r u saying?");
     // {allowedMentions: {repliedUser: false}}
@@ -40,7 +40,6 @@ async function commandListener(message) {
 }
 
 function commandValidate(command, message) {
-    const Command = __("command/command");
     if (!command instanceof Command) return false;
 	const {modifier, permissions} = command.data;
 	const {author, channel, member} = message;

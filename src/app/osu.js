@@ -1,7 +1,11 @@
 const {Api} = require("node-osu");
 const {URL} = require("url");
 
-let api = process.env.OSU_API_KEY && new Api(process.env.OSU_API_KEY, {parseNumeric: true});
+let api = process.env.OSU_API_KEY &&
+	new Api(process.env.OSU_API_KEY, {
+		notFoundAsError: false,
+		parseNumeric: true
+	});
 const mirror = process.env.HEROKU_URL + "osu/download/{id}?noVideo={n}";
 module.exports = {
 	download: async (id, noVideo=true) => fetch(placeholder(mirror, {id: +id, n: noVideo ? 1 : 0})),
@@ -105,34 +109,34 @@ const f_int = (value) => parseInt(value).toLocaleString("en-US");
 async function player(player, mode=0) {
     mode = getMode(mode) ?? 0;
     let modeText = modeName[mode];
+	mode = +mode;
     let p = await api.getUser({u: player, m: mode});
 
-    if (!p) return null;
-    // Play time calculation
-    let playTime = p.secondsPlayed;
-    let d = ~~(playTime / (3600 * 24));
-    let h = ~~(playTime % (3600 * 24) / 3600);
-    let m = ~~(playTime % 3600 / 60);
-    let hours = Math.round(playTime / 60 / 60);
+	if (!p || p.length == 0) return null;
+	// Play time calculation
+	let playTime = p.secondsPlayed;
+	let d = ~~(playTime / (3600 * 24));
+	let h = ~~(playTime % (3600 * 24) / 3600);
+	let m = ~~(playTime % 3600 / 60);
+	let hours = Math.round(playTime / 60 / 60);
 
-    let avatar = `https://a.ppy.sh/${p.id}`;
-    let {status} = await fetch(avatar);
+	let avatar = `https://a.ppy.sh/${p.id}`;
+	let {status} = await fetch(avatar);
 	status !== 200 && (avatar = "https://osu.ppy.sh/images/layout/avatar-guest.png");
+	return {
+		id: p.id,
+		avatar: avatar,
+		username: p.name,
+		join_date: p.raw_joinDate,
+		accuracy: (+p.accuracy).toFixed(2),
+		level: Math.round(p.level),
+		playtime: `${d}d ${h}h ${m}m (${hours} hours)`,
 
-    return {
-        id: p.id,
-        avatar: avatar,
-        username: p.name,
-        join_date: p.joinDate,
-        accuracy: (+p.accuracy).toFixed(2),
-        level: Math.round(p.level),
-        playtime: `${d}d ${h}h ${m}m (${hours} hours)`,
-
-        total_score: f_int(p.scores.total),
-        ranked_score: f_int(p.scores.ranked),
-        pp: Math.round(p.pp.raw).toLocaleString("en-US"),
-        rank: f_int(p.pp.rank),
-        country_rank: f_int(p.pp.countryRank),
+		total_score: f_int(p.scores.total),
+		ranked_score: f_int(p.scores.ranked),
+		pp: Math.round(p.pp.raw).toLocaleString("en-US"),
+		rank: f_int(p.pp.rank),
+		country_rank: f_int(p.pp.countryRank),
 
         mode_id: mode,
         mode_text: modeText,
