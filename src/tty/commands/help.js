@@ -8,10 +8,9 @@ const help = new Command({
 
 function execute(args) {
     const cm = help.getCommandManager();
-    const {write} = cm.getWriter();
     switch (args.length) {
         case 0:
-            write(
+            cm.write(
                 [
                     "",
                     "All available commands: ",
@@ -19,16 +18,17 @@ function execute(args) {
                         .map(cmd => `  ${cmd.label} - ${cmd.description}`)
                 ]
                 .flat()
-                .join("\n")
+                .join("\n"),
+                {label: "TTY"}
             );
             return true;
         case 1:
             if (!cm.hasCommand(args[0])) {
-                write(`No help available for '${args[0]}'`);
+                cm.write(`No help available for '${args[0]}'`);
                 return false;
             }
             const command = cm.getCommand(args[0]);
-            write(
+            cm.write(
                 [
                     "",
                     command.label,
@@ -36,11 +36,12 @@ function execute(args) {
                     `Description: ${command.description}`,
                     `Usage: ${command.usage}`
                 ]
-                .join("\n")
+                .join("\n"),
+                {label: "TTY"}
             );
             return true;
         default:
-            write(`Usage: ${help.usage}`);
+            cm.write(`Usage: ${help.usage}`, {label: "TTY"});
             return false;
     }
 }

@@ -32,10 +32,10 @@ async function simsimiListener(message) {
 async function commandListener(message) {
     const content = message.content;
     if (!content.startsWith(prefix)) return false;
-    Logger.info(`User ${message.author.tag} issued bot command: ${content}`);
+    Logger.info(`User ${message.author.tag} issued bot command: ${content}`, {label: "Discord"});
     let rawCommand = content.substr(prefix.length);
     await discord.command.manager.execute(rawCommand, message, commandValidate);
-    Logger.info("Command executed!");
+    Logger.info("Command executed!", {label: "Discord"});
     return true;
 }
 

@@ -1,9 +1,6 @@
 const {MessageAttachment, MessageEmbed} = require("discord.js");
 const osu = __("app/osu");
 
-const MESSAGES = {
-    ERROR: "```diff\n- ERROR: An error occurred\n```"
-}
 const osuCmd = new Command({
     label: "osu",
     aliases: ["oxu", "o"],
@@ -48,7 +45,7 @@ async function execute(args, message) {
         case 2:
             switch (args.shift().toLowerCase()) {
                 default:
-                    channel.send(`**Usage:** \`${osuCmd.usage}\``);
+                    await channel.send(`**Usage:** \`${osuCmd.usage}\``);
                     return false;
                 case "player":
                 case "p":
@@ -66,11 +63,11 @@ async function execute(args, message) {
                     return !!binfo;
                 case "mirror":
                 case "m":
-                    channel.send("Getting beatmap...");
+                    await channel.send("Getting beatmap...");
                     let id = Number.isInteger(+args[0]) ? args[0] : osu.parseLink(args[0]).beatmapset_id;
                     let d = await osu.download(id);
                     if (d.status != 200) {
-                        channel.send((await d.json()).message);
+                        await channel.send((await d.json()).message);
                         return false;
                     }
                     channel.send(d.url);
@@ -115,64 +112,96 @@ async function execute(args, message) {
             }
     }
 }
-
-async function playerInfo(player, mode=0) {
-    let p = (await osu.player(player, mode));
-    if (!p) return null;
-    let description = [
-        `**User**: ${p.username} (ID: ${p.id})`,
-        `**Joined Osu!:** ${p.join_date}`,
-        `**Accuracy: ** ${p.accuracy}%`,
-        `**Level:** ${p.level}`,
-        `**Total Play Time:** ${p.playtime}`,
-        "",
-        `**Ranked Score:** ${p.ranked_score}`,
-        `**Total Score:** ${p.total_score}`,
-        `**PP:** ${p.pp}`,
-        `**Rank:** #${p.rank}`,
-        `**Country rank:** #${p.country_rank}`,
-        "",
-        `**Play Count:** ${p.playcount}`,
-        `**SS+ plays:** ${p.ssh}`,
-        `**SS plays:** ${p.ss}`,
-        `**S+ plays:** ${p.sh}`,
-        `**S plays:** ${p.s}`,
-        `**A plays:** ${p.a}`
-    ].join("\n");
-    let img = `https://lemmmy.pw/osusig/sig.php?colour=hexff66aa&uname=${encodeURI(p.username)}&pp=2&mode=${p.mode_id}&countryrank&flagshadow&onlineindicator=undefined&xpbar&xpbarhex`;
-    return new MessageEmbed()
-        .setColor(0xff66aa)
-        .setDescription(description)
-        .setThumbnail(p.avatar)
-        .setImage(img)
-        .setAuthor(p.username, p.avatar, `https://osu.ppy.sh/users/${p.id}`)
-        .setFooter(`Mode: ${p.mode_text}`)
+const formatPlayTime = playTime => {
+    let d = Math.floor(playTime / (3600 * 24));
+    let h = Math.floor(playTime % (3600 * 24) / 3600);
+    let m = Math.floor(playTime % 3600 / 60);
+    let hours = Math.round(playTime / 3600);
+    return `${d}d ${h}h ${m}m (${hours} hours)`;
 }
 
-async function beatmapInfo(b, mode) {
-    b = (await osu.beatmap(b, mode));
-    if (!b) return null;
+Number.prototype.pad = (_=2) => this.toString.padStart(_, "0")
+const formatJoinDate = joinDate => {
+    let date = new Date(joinDate);
+    return `${date.getUTCFullYear()}-${(date.getUTCMonth()+1).pad()}-${date.getUTCDate().pad()} ${date.getUTCHours().pad()}:${date.getUTCMinutes().pad()}:${date.getUTCSeconds().pad()}`
+}
+
+async function playerInfo(player, mode=0) {
+    if ((player + "").indexOf("osu.ppy.sh") !== -1) {
+        player = osu.parseLink(player).user_id;
+    }
+    if (!player) return false;
+    mode = osu.getModeId(mode);
+    let p;
+    try {
+        p = await osu.apiV2.user(player, mode);
+    } catch (e) {
+        Logger.error(e, {label: "Discord"});
+        return false;
+    }
+
     let description = [
-        `**Beatmap:** https://osu.ppy.sh/b/${b.beatmap_id}`,
-        `**Title:** ${b.title}`,
-        `**Origin Title:** ${b.source}`,
-        `**Artist**: ${b.artist}`,
-        `**Creator:** ${b.creator}`,
-        `**BPM:** ${b.bpm}`,
-        `**Approval Status:** ${b.status}`,
-        `**User Rating:** ${b.rating}`,
+        `**User**: ${p.username} (ID: ${p.id})`,
+        `**Joined Osu!:** ${formatJoinDate(p.join_date)}`,
+        `**Accuracy: ** ${p.statistics.hit_accuracy.toFixed(2)}%`,
+        `**Level:** ${p.statistics.level.current}`,
+        `**Total Play Time:** ${formatPlayTime(p.statistics.play_time)}`,
+        "",
+        `**Ranked Score:** ${p.statistics.ranked_score.toLocaleString("en-US")}`,
+        `**Total Score:** ${p.statistics.total_score.toLocaleString("en-US")}`,
+        `**PP:** ${Math.floor(p.statistics.pp).toLocaleString("en-US")}`,
+        `**Rank:** #${p.statistics.global_rank.toLocaleString("en-US")}`,
+        `**Country rank:** #${p.statistics.rank.country.toLocaleString("en-US")}`,
+        "",
+        `**Play Count:** ${p.statistics.play_count.toLocaleString("en-US")}`,
+        `**SS+ plays:** ${p.statistics.grade_counts.ssh.toLocaleString("en-US")}`,
+        `**SS plays:** ${p.statistics.grade_counts.ss.toLocaleString("en-US")}`,
+        `**S+ plays:** ${p.statistics.grade_counts.sh.toLocaleString("en-US")}`,
+        `**S plays:** ${p.statistics.grade_counts.s.toLocaleString("en-US")}`,
+        `**A plays:** ${p.statistics.grade_counts.a.toLocaleString("en-US")}`
+    ].join("\n");
+    let avatar = await osu.getUserAvatar(p.id);
+    let img = `https://lemmmy.pw/osusig/sig.php?colour=hexff66aa&uname=${encodeURI(p.username)}&pp=2&mode=${mode}&countryrank&flagshadow&onlineindicator=undefined&xpbar&xpbarhex`;
+    img = await fetch(img).then(_ => _.buffer());
+    let name = p.id + ".png";
+    img = new MessageAttachment(img, name);
+    return new MessageEmbed()
+        .attachFiles([img])
+        .setColor(0xff66aa)
+        .setDescription(description)
+        .setThumbnail(avatar)
+        .setImage("attachment://" + name)
+        .setAuthor(p.username, avatar, `https://osu.ppy.sh/users/${p.id}`)
+        .setFooter(`Mode: ${osu.getModeName(mode)}`)
+}
+
+async function beatmapInfo(b) {
+    if ((b + "").indexOf("osu.ppy.sh") !== -1) {
+        b = osu.parseLink(b).beatmap_id;
+    }
+    if (!b) return false;
+    b = await osu.apiV2.beatmap(b);
+    let s = b.beatmapset;
+
+    let description = [
+        `**Beatmap:** ${b.url}`,
+        `**Title:** ${s.title}`,
+        `**Origin Title:** ${s.source}`,
+        `**Artist**: ${s.artist}`,
+        `**Creator:** ${s.creator}`,
+        `**BPM:** ${s.bpm}`,
+        `**Status:** ${s.status}`,
         "",
         `**Version:** ${b.version}`,
-        `**Circle size (CS): ** ${b.cs}`,
-        `**Drain (HP):** ${b.hp}`,
-        `**Overall (OD)**: ${b.od}`,
-        `**Approach rate (AR):** ${b.ar}`,
-        `**Star difficulty:** ${b.stars}⭐`
+        `**Circle size (CS): ** ${b.cs.toFixed(1)}`,
+        `**Drain (HP):** ${b.drain.toFixed(1)}`,
+        `**Overall (OD)**: ${b.accuracy.toFixed(1)}`,
+        `**Approach rate (AR):** ${b.ar.toFixed(1)}`,
+        `**Star difficulty:** ${b.difficulty_rating.toFixed(2)} ⭐`
     ].join("\n");
     return new MessageEmbed()
         .setColor(0xff66aa)
         .setDescription(description)
-        .setThumbnail(b.thumbnail)
-        .setImage(b.cover)
-        .setFooter(b.hash)
+        .setThumbnail(s.covers.list)
+        .setImage(s.covers.cover)
 }

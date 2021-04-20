@@ -26,7 +26,7 @@ class Shell {
     }
 
     ask(question, onAnswered) {
-        this.commandManager.getWriter().write(question);
+        this.commandManager.write(question);
         this.asking = true;
         this.onAnswered = onAnswered;
     }
@@ -36,7 +36,7 @@ class Shell {
     }
 
     handle(input) {
-        if (!input) return true;
+        if (!input) return false;
         if (!this.asking) return this.commandManager.execute(input);
         this.asking = false;
         this.onAnswered(input);

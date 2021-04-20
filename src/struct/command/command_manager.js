@@ -11,13 +11,14 @@ class CommandManager {
     #writer;
     #feedback;
     constructor(opts = {
-        writer: new Writer(s => Logger.info(s)),
+        writer: new Writer(),
         feedback: new CommandFeedback()
     }) {
         this.#registered = new CIM();
         this.#aliases = new CIM();
-        this.#writer = opts.writer;
-        this.#feedback = opts.feedback;
+        if (typeof opts.writer === "function") opts.writer = new Writer(opts.writer);
+        this.#writer = (typeof opts.writer === "function" ? new Writer(opts.writer) : opts.writer instanceof Writer ? opts.writer : null) ?? new Writer();
+        this.#feedback = opts.feedback ?? new CommandFeedback();
     }
 
     /**
@@ -44,26 +45,27 @@ class CommandManager {
             );
     }
 
-    execute(rawCommand, data, validate=()=>true) {
+    async execute(rawCommand, data, validate=()=>true) {
         let args = rawCommand.split(" ");
-        let label = args.length > 0 ? args.shift() : rawCommand;
+        let label = args.length > 0 ? await args.shift() : rawCommand;
         if (this.hasCommand(label)) {
             const command = this.getCommand(label);
-            return validate(command, data) ?
-                command.execute(args, data)
-                    .catch(e => {
-                        error(e);
-                        this.#writer.write("An error occurred");
-                    }) :
-                false;
+            if (!validate(command, data)) return false;
+            try {
+                await command.execute(args, data)
+            } catch(e) {
+                error(e);
+                this.write("An error occurred");
+            }
         } else {
-            this.#feedback && this.#writer.write(placeholder(this.#feedback.commandNotFound, "label", label));
+            this.#feedback.commandNotFound !== "" &&
+            this.write(placeholder(this.#feedback.commandNotFound, "label", label), data);
             return false;
         }
     }
 
-    getWriter() {
-        return this.#writer;
+    write(content, data) {
+        return this.#writer.write(content, data);
     }
 
     getRegistered() {

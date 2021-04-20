@@ -1,7 +1,12 @@
 
 class Writer {
-    constructor(write = s => console.log(s)) {
-        this.write = write;
+    #writeFn;
+    constructor(write = (...s) => Logger.info(s)) {
+        this.#writeFn = write;
+    }
+
+    write(content, data) {
+        return this.#writeFn(content, data);
     }
 }
 

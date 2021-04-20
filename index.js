@@ -1,4 +1,4 @@
-global.Logger = console;
+global.Logger = console; // fallback
 global.error = e => Logger.error(e.stack || e);
 const fs = require("mz/fs");
 const path = require("path");
@@ -12,7 +12,7 @@ async function walk(dir) {
 }
 
 (async () => {
-	console.info("Initializing...");
+	Logger.info("Initializing...");
 	global.__root = __dirname;
 	global.__src = path.join(__dirname, "src");
 	global.__ = _path => require("./" + path.join("src", _path));
@@ -24,7 +24,7 @@ async function walk(dir) {
 		logger: require("./configuration/logger.json"),
 		tty: require("./configuration/tty.json"),
 	}
-	__("util/placeholder");
+	invoke("util/placeholder");
 	let files = await walk(path.join(__src, "struct"));
 	files.map(require).forEach(_class => global[_class.name] = _class);
 })()
@@ -33,7 +33,7 @@ async function walk(dir) {
 	error(e);
 	process.exit(1);
 }) // display error and stop when init logger failed
-.then(() => invoke("http/index", Logger))
+.then(() => invoke("http/server", Logger))
 .then(() => invoke("tty/autoload")) // load tty
 .then(() => invoke("discord/autoload")) // load discord
 .catch(error);

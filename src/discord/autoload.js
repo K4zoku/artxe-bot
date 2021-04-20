@@ -1,11 +1,14 @@
 const {readdir} = require("fs").promises;
 const {join} = require("path");
+const loggerOpts = {
+	label: "Discord",
+}
 
 module.exports = async () => require("./client")()
-	.then(client => {
-		loadCommands();
-		loadEvents(client);
-	});
+	.then(client => Promise.all([
+		loadCommands(),
+		loadEvents(client)
+	]));
 
 const eventDirectory = join(__src, "discord/events");
 const loadEvents = async (client) => {
@@ -18,12 +21,13 @@ const loadEvents = async (client) => {
 }
 
 const loadCommands = async () => {
-	Logger.info("Loading Discord commands...");
+	Logger.info("Loading Discord commands...", loggerOpts);
     const discordCM = new CommandManager({
-    	writer: (content, message) => message.channel.send(content)
+    	writer: new Writer((content, message) => message.reply(content)),
+		feedback: new CommandFeedback()
     });
     discordCM.loadCommands(join(__src, "discord/commands"))
-        .catch(error => Logger.error(error.stack ?? error));
+        .catch(error => Logger.error(error.stack ?? error, loggerOpts));
     discord.command = {
     	manager: discordCM
     }

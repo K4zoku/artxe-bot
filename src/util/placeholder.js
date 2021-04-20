@@ -20,23 +20,23 @@ function get(placeholder) {
 function apply(text, placeholder, value) {
     return text.replace(get(placeholder), value);
 }
-
-global.placeholder = (txt, plh, val) => {
-    if (typeof txt !== 'string') throw new TypeError('Expected a string');
-    switch (typeof plh) {
-        case "string":
-            return apply(txt, plh, val ?? "");
-        case "object":
-            if (plh.constructor === Object)
-                plh = Object.entries(plh);
-            else if (plh instanceof Map)
-                plh = Array.from(plh)
-                    .map(([p, v]) => [p, v]);
-            if (!(plh instanceof Array)) return txt;
-            for (const [p, v] of plh)
-                txt = apply(txt, p, v);
-            return txt;
-        default: return txt;
+module.exports = () =>
+    global.placeholder = (txt, plh, val) => {
+        if (typeof txt !== 'string') throw new TypeError('Expected a string');
+        switch (typeof plh) {
+            case "string":
+                return apply(txt, plh, val ?? "");
+            case "object":
+                if (plh.constructor === Object)
+                    plh = Object.entries(plh);
+                else if (plh instanceof Map)
+                    plh = Array.from(plh)
+                        .map(([p, v]) => [p, v]);
+                if (!(plh instanceof Array)) return txt;
+                for (const [p, v] of plh)
+                    txt = apply(txt, p, v);
+                return txt;
+            default: return txt;
+        }
     }
-}
 

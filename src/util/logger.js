@@ -44,7 +44,7 @@ async function archive() {
 function format(log, color=false) {
     let level = log.level.toUpperCase();
     if (color) level = colorize(level);
-    return `[${log.timestamp} ${level}]: ${log.stack ?? log.message}`
+    return `[${log.timestamp} ${level}]:${log.label && " ["+log.label+"]" || ""} ${log.stack ?? log.message}`
 }
 
 function colorize(level) {
