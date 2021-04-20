@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "case-insensitive-map": "^1.0.1",
-    "discord.js": "^12.5.1",
+    "discord.js": "^12.5.3",
     "fs-promise": "^2.0.3",
     "mime": "^2.5.2",
     "mz": "^2.7.0",

@@ -1,0 +1,88 @@
+diff --git a/node_modules/discord.js/src/structures/APIMessage.js b/node_modules/discord.js/src/structures/APIMessage.js
+index 3451bdb..50fd923 100644
+--- a/node_modules/discord.js/src/structures/APIMessage.js
++++ b/node_modules/discord.js/src/structures/APIMessage.js
+@@ -143,7 +143,7 @@ class APIMessage {
+    * Resolves data.
+    * @returns {APIMessage}
+    */
+-  resolveData() {
++resolveData() {
+     if (this.data) return this;
+ 
+     const content = this.makeContent();
+@@ -151,8 +151,11 @@ class APIMessage {
+ 
+     let nonce;
+     if (typeof this.options.nonce !== 'undefined') {
+-      nonce = parseInt(this.options.nonce);
+-      if (isNaN(nonce) || nonce < 0) throw new RangeError('MESSAGE_NONCE_TYPE');
++      nonce = this.options.nonce;
++      // eslint-disable-next-line max-len
++      if (typeof nonce === 'number' ? !Number.isInteger(nonce) : typeof nonce !== 'string') {
++        throw new RangeError('MESSAGE_NONCE_TYPE');
++      }
+     }
+ 
+     const embedLikes = [];
+@@ -182,19 +185,20 @@ class APIMessage {
+       typeof this.options.allowedMentions === 'undefined'
+         ? this.target.client.options.allowedMentions
+         : this.options.allowedMentions;
+-    if (this.options.reply) {
+-      const id = this.target.client.users.resolveID(this.options.reply);
+-      if (allowedMentions) {
+-        // Clone the object as not to alter the ClientOptions object
+-        allowedMentions = Util.cloneObject(allowedMentions);
+-        const parsed = allowedMentions.parse && allowedMentions.parse.includes('users');
+-        // Check if the mention won't be parsed, and isn't supplied in `users`
+-        if (!parsed && !(allowedMentions.users && allowedMentions.users.includes(id))) {
+-          if (!allowedMentions.users) allowedMentions.users = [];
+-          allowedMentions.users.push(id);
+-        }
+-      } else {
+-        allowedMentions = { users: [id] };
++
++    if (allowedMentions) {
++      allowedMentions = Util.cloneObject(allowedMentions);
++      allowedMentions.replied_user = allowedMentions.repliedUser;
++      delete allowedMentions.repliedUser;
++    }
++
++    let message_reference;
++    if (typeof this.options.replyTo !== 'undefined') {
++      const message_id = this.isMessage
++        ? this.target.channel.messages.resolveID(this.options.replyTo)
++        : this.target.messages.resolveID(this.options.replyTo);
++      if (message_id) {
++        message_reference = { message_id };
+       }
+     }
+ 
+@@ -206,8 +210,10 @@ class APIMessage {
+       embeds,
+       username,
+       avatar_url: avatarURL,
+-      allowed_mentions: typeof content === 'undefined' ? undefined : allowedMentions,
++      allowed_mentions:
++        typeof content === 'undefined' && typeof message_reference === 'undefined' ? undefined : allowedMentions,
+       flags,
++      message_reference,
+     };
+     return this;
+   }
+diff --git a/node_modules/discord.js/src/structures/Message.js b/node_modules/discord.js/src/structures/Message.js
+index 36c26f2..de6ec04 100644
+--- a/node_modules/discord.js/src/structures/Message.js
++++ b/node_modules/discord.js/src/structures/Message.js
+@@ -602,7 +602,9 @@ class Message extends Base {
+     return this.channel.send(
+       content instanceof APIMessage
+         ? content
+-        : APIMessage.transformOptions(content, options, { reply: this.member || this.author }),
++        : APIMessage.transformOptions(content, options, {
++            replyTo: this,
++          }),
+     );
+   }
+ 
