@@ -27,6 +27,7 @@ async function walk(dir) {
 	invoke("util/placeholder");
 	let files = await walk(path.join(__src, "struct"));
 	files.map(require).forEach(_class => global[_class.name] = _class);
+	setInterval(_ => fetch(process.env.HEROKU_URL, {method: "HEAD"}).then(_ => Logger.info("Wake the f*** up Samurai")), 1740000)
 })()
 	.then(() => invoke("util/logger")) // init logger
 	.catch(e => {
