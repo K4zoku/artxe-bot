@@ -32,7 +32,9 @@ let defaultRouter = new Router("[\s\S]*", async (request, response) => {
 	let r = {
 		status: 200,
 		encoding: "utf-8",
-		headers: {},
+		headers: {
+			"content-type": "text/plain"
+		},
 		content: ""
 	}
 	do {
@@ -47,7 +49,7 @@ let defaultRouter = new Router("[\s\S]*", async (request, response) => {
 		try {
 			let s = await stat(realPath);
 			if (s.isFile()) {
-				r.headers["content-type"] = getType(realPath) ?? undefined;
+				r.headers["content-type"] = getType(realPath) ?? r.headers["content-type"];
 				r.headers["content-length"] = s.size; // unit: bytes
 				r.content = await readFile(realPath);
 			} else if (s.isDirectory()) {
