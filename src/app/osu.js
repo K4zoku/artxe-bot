@@ -136,10 +136,14 @@ async function getUser(discord_id) {
 
 async function setUser(discord_id, osu_id) {
 	await initTable();
-	let rows = await pg.select("*").from("osu").where({discord_id});
-	return rows === 0 ?
-		await pg.insert({discord_id, osu_id}).into("osu") :
-		await pg.update({osu_id}).table("osu").where({discord_id});
+	return pg.select("*")
+		.from("osu")
+		.where({discord_id})
+		.then(rows =>
+			rows.length === 0 ?
+				pg.insert({discord_id, osu_id}).into("osu") :
+				pg.update({osu_id}).table("osu").where({discord_id}))
+		.catch(e => error(e, {label: "Osu/Database"}))
 }
 
 async function initTable() {
