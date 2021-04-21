@@ -5,7 +5,7 @@ const osuCmd = new Command({
     label: "osu",
     aliases: ["oxu", "o"],
     description: "Osu!Command",
-    usage: "osu <user|beatmap|mirror>",
+    usage: "osu <user | beatmap | mirror> [opts...]",
     execute: execute,
     data: {
         modifier: 0x6,
@@ -19,8 +19,15 @@ async function execute(args, message) {
     const {channel} = message;
     switch (args.length) {
         case 0:
-            await channel.send(`**Usage:** \`${osuCmd.usage}\``);
-            return false;
+            let linked = await osu.getUser(message.author.id);
+            if (linked.length === 0) {
+                await channel.send(`**Usage:** \`${osuCmd.usage}\``);
+                return false;
+            }
+            let [{osu_id}] = linked;
+            let pinfo = await playerInfo(osu_id);
+            await channel.send(pinfo);
+            return !!pinfo;
         case 1:
             switch (args.shift().toLowerCase()) {
                 case "profile":
@@ -28,18 +35,30 @@ async function execute(args, message) {
                 case "p":
                 case "user":
                 case "u":
-                    await channel.send("**Usage:** `osu user <name> [--mode <mode>]`");
-                    return false;
+                    let linked = await osu.getUser(message.author.id);
+                    if (linked.length === 0) {
+                        await channel.send("**Usage:** `osu user <username | user_id | profile_url> [--mode <mode>]`");
+                        return false;
+                    }
+                    let [{osu_id}] = linked;
+                    let pinfo = await playerInfo(osu_id);
+                    await channel.send(pinfo);
+                    return !!pinfo;
                 case "beatmap":
                 case "bm":
                 case "b":
-                    await channel.send("**Usage:** `osu beatmap <id or link> [mode]`");
+                    await channel.send("**Usage:** `osu beatmap <beatmap_id | beatmap_url> [mode]`");
                     return false;
                 case "mirror":
                 case "m":
-                    await channel.send("**Usage:** `osu mirror <id or link>`");
+                    await channel.send("**Usage:** `osu mirror <beatmapset_id | beatmapset_url>`");
+                    return false;
+                case "link":
+                case "l":
+                    await channel.send("**Usage:** `osu link <user_id | profile_url>`");
                     return false;
                 default:
+                    await channel.send(`**Usage:** \`${osuCmd.usage}\``);
                     return false;
             }
         case 2:
@@ -70,14 +89,23 @@ async function execute(args, message) {
                         await channel.send((await d.json()).message);
                         return false;
                     }
-                    channel.send(d.url);
+                    await channel.send(d.url);
                     let size = (+d.headers.get("content-length")) / 1048576; // to Mb
                     if (size > 8) return true;
                     const pattern = /filename\*?=['"]?(?:UTF-\d['"]*)?([^;\r\n"']*)['"]?;?/i;
                     let name = d.headers.get("content-disposition").match(pattern)[1];
                     name = decodeURI(name);
-                    channel.send("Attachment", new MessageAttachment(await d.buffer(), name));
+                    await channel.send("Attachment", new MessageAttachment(await d.buffer(), name));
                     return true;
+                case "link":
+                case "l":
+                    let res = await link(message.author.id, args.join(" "))
+                        .catch(e => {
+                            error(e, {label: "Discord"});
+                            return false;
+                        });
+                    await channel.send(res ? `Linked with ${res.username} (${res.id}) successfully` : `Failed to link with ${res.name} (${res.id})`);
+                    return !!res;
             }
         default:
             switch (args.shift().toLowerCase()) {
@@ -112,6 +140,21 @@ async function execute(args, message) {
             }
     }
 }
+
+async function link(discordId, player) {
+    if ((player + "").indexOf("osu.ppy.sh") !== -1) {
+        player = osu.parseLink(player).user_id;
+    }
+    if (!player) return false;
+    try {
+        player = await osu.apiV2.user(player, 0);
+    } catch (e) {
+        Logger.error(e, {label: "Discord"});
+        return false;
+    }
+    return osu.setUser(discordId, player.id).then(_ => player);
+}
+
 const formatPlayTime = playTime => {
     let d = Math.floor(playTime / (3600 * 24));
     let h = Math.floor(playTime % (3600 * 24) / 3600);
@@ -120,7 +163,9 @@ const formatPlayTime = playTime => {
     return `${d}d ${h}h ${m}m (${hours} hours)`;
 }
 
-Number.prototype.pad = (_=2) => this.toString.padStart(_, "0")
+Number.prototype.pad = function (n = 2) {
+    return this.toString().padStart(n, "0");
+}
 const formatJoinDate = joinDate => {
     let date = new Date(joinDate);
     return `${date.getUTCFullYear()}-${(date.getUTCMonth()+1).pad()}-${date.getUTCDate().pad()} ${date.getUTCHours().pad()}:${date.getUTCMinutes().pad()}:${date.getUTCSeconds().pad()}`

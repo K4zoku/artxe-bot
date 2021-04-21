@@ -12,6 +12,8 @@ module.exports = {
 	getModeName,
 	getUserAvatar,
 	parseLink,
+	getUser,
+	setUser,
 }
 
 const mirror = process.env.HEROKU_URL + "osu/download/{id}?noVideo={n}";
@@ -123,4 +125,30 @@ function parseLink(url) {
 		default:
 			return false;
 	}
+}
+
+async function getUser(discordId) {
+	await initTable();
+	return pg.select("osu_id")
+		.from("osu")
+		.where({discord_id: discordId});
+}
+
+async function setUser(discord_id, osu_id) {
+	await initTable();
+	let rows = await pg.select("*").from("osu").where({discord_id}).length;
+	return rows === 0 ?
+		pg.insert({discord_id, osu_id}).into("osu") :
+		pg.update({osu_id}).table("osu").where({discord_id});
+}
+
+async function initTable() {
+	return pg.schema.hasTable("osu")
+		.then(exists => !exists &&
+			pg.schema.createTable("osu", table => {
+				table.string("discord_id", 32);
+				table.string("osu_id", 16);
+				table.unique(["discord_id"], "discord_id");
+			}) || exists
+		);
 }

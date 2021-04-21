@@ -28,12 +28,13 @@ async function walk(dir) {
 	let files = await walk(path.join(__src, "struct"));
 	files.map(require).forEach(_class => global[_class.name] = _class);
 })()
-.then(() => invoke("util/logger")) // init logger
-.catch(e => {
-	error(e);
-	process.exit(1);
-}) // display error and stop when init logger failed
-.then(() => invoke("http/server", Logger))
+	.then(() => invoke("util/logger")) // init logger
+	.catch(e => {
+		error(e);
+		process.exit(1);
+	}) // display error and stop when init logger failed
+	.then(() => invoke("http/server", Logger))
+	.then(() => invoke("database/client"))
 .then(() => invoke("tty/autoload")) // load tty
 .then(() => invoke("discord/autoload")) // load discord
 .catch(error);
