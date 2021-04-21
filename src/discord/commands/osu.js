@@ -184,6 +184,7 @@ async function playerInfo(player, mode=0) {
         Logger.error(e, {label: "Discord"});
         return false;
     }
+    mode = osu.getModeId(p.playmode);
 
     let description = [
         `**User**: ${p.username} (ID: ${p.id})`,
@@ -206,7 +207,7 @@ async function playerInfo(player, mode=0) {
         `**A plays:** ${p.statistics.grade_counts.a.toLocaleString("en-US")}`
     ].join("\n");
     let avatar = await osu.getUserAvatar(p.id);
-    let img = `https://lemmmy.pw/osusig/sig.php?colour=hexff66aa&uname=${encodeURI(p.username)}&pp=2&mode=${mode}&countryrank&flagshadow&onlineindicator=undefined&xpbar&xpbarhex`;
+    let img = `https://lemmmy.pw/osusig/sig.php?colour=hexff66aa&pp=2&countryrank&flagshadow&onlineindicator&xpbar&xpbarhex&uname=${encodeURI(p.username)}&mode=${mode}`;
     img = await fetch(img).then(_ => _.buffer());
     let name = p.id + ".png";
     img = new MessageAttachment(img, name);
