@@ -33,7 +33,7 @@ async function archive() {
         const newLogFile = newName.slice(0, -3); // remove .gz
         return rename(logFile, newLogFile)
             .then(_ => gzip(newLogFile, newName))
-            .then(ws => ws.on("end", _ => unlink(newLogFile)));
+            .then(ws => ws.on("finish", _ => unlink(newLogFile)));
     }
 }
 
