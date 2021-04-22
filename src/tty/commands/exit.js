@@ -11,14 +11,13 @@ const flags = {
 }
 
 function execute(args) {
-    let exitCode = 0;
-    if (args[0]) exitCode = +args[0];
+    let exitCode = args[0] ? +args[0] : 0;
     if (hasFlags(args, flags.no_confirm)) exit(exitCode);
     else confirm(exitCode);
     return true;
 }
 
-const equals = (a, b) => a === b; 
+const equals = (a, b) => a === b;
 const equalsIgnoreCase = (a, b) => a.toUpperCase() === b.toUpperCase(); 
 
 function hasFlags(args, flags, ignoreCases = true) {
@@ -26,8 +25,7 @@ function hasFlags(args, flags, ignoreCases = true) {
 }
 
 function confirm(exitCode = 1, msg = "Do you really want to exit the application? [y/n]") {
-    process.global.shell
-        .asyncAsk(msg)
+    shell.asyncAsk(msg)
         .then(ans => {
             switch (ans.toLowerCase()) {
                 case "y":

@@ -1,4 +1,3 @@
-const {URL} = require("url");
 const NodeCache = require("node-cache");
 const cache = new NodeCache({stdTTL: 60*5});
 
@@ -50,6 +49,7 @@ async function handler(request, response) {
             message: res.message,
         });
     } while(0);
+
     !cache.has(k) && cache.set(k, r);
 
     response.writeHead(r.status, r.headers);

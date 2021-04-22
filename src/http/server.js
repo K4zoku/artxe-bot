@@ -4,7 +4,6 @@ const {join} = require("path");
 const {getType} = require("mime");
 const root = join(__dirname, "../..");
 
-
 module.exports = async () => {
 	const server = createServer(onRequest);
 	info("Loading routes...");
@@ -12,7 +11,6 @@ module.exports = async () => {
 	let port = process.env.PORT || 42783;
 	server.listen(port);
 	info("Listening on port " + port);
-
 }
 
 let routes = [];
@@ -73,7 +71,6 @@ let defaultRouter = new Router("[\s\S]*", async (request, response) => {
 	response.writeHead(r.status, r.headers);
 	response.end(r.content, r.encoding);
 	info(r.status);
-	info(sep);
 });
 
 const sep = "_".repeat(20);

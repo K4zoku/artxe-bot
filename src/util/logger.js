@@ -5,17 +5,13 @@ const {join} = require("path");
 const winston = require("winston");
 const colors = require("../tty/colors");
 
-module.exports = async () => archive().then(() => initLogger());
+module.exports = async () => archive().then(initLogger);
 
 const logPath = join(__root, "logs");
 const logFileName = "latest.log";
-async function fileNewName(path, name, ext = "", format = f => join(f.path, `${f.name}-${f.n}.${f.ext}`)) {
-    let f = {
-        path: path,
-        name: name,
-        ext: ext,
-        n: 1
-    }
+
+async function fileNewName(path, name, ext = "", n = 1, format = f => join(f.path, `${f.name}-${f.n}.${f.ext}`)) {
+    let f = {path, name, ext, n};
     let fullPath;
     while (await exists(fullPath = await format(f))) f.n++;
     return fullPath;
@@ -71,9 +67,9 @@ function colorize(level) {
     return colors.colorize(level, color);
 }
 
-async function initLogger() {
+const initLogger = async () => {
     const {stdin, stdout} = process;
-    const isTTY = stdin.isTTY && stdout.isTTY;            
+    const isTTY = stdin.isTTY && stdout.isTTY;
 
     return global.Logger = winston.createLogger({
         exitOnError: false,

@@ -1,4 +1,3 @@
-const {join} = require("path");
 const {MessageEmbed} = require("discord.js");
 
 const help = new Command({

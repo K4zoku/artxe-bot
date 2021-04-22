@@ -4,11 +4,11 @@ const loggerOpts = {
 	label: "Discord",
 }
 
-module.exports = async () => require("./client")()
+module.exports = async () => invoke("discord/client")
 	.then(client => Promise.all([
 		loadCommands(),
 		loadEvents(client)
-	]));
+	])).catch(e => error(e, loggerOpts));
 
 const eventDirectory = join(__src, "discord/events");
 const loadEvents = async (client) => {
@@ -22,13 +22,17 @@ const loadEvents = async (client) => {
 
 const loadCommands = async () => {
 	Logger.info("Loading Discord commands...", loggerOpts);
-    const discordCM = new CommandManager({
-    	writer: new Writer((content, message) => message.reply(content)),
-		feedback: new CommandFeedback()
-    });
-    discordCM.loadCommands(join(__src, "discord/commands"))
-        .catch(error => Logger.error(error.stack ?? error, loggerOpts));
-    discord.command = {
-    	manager: discordCM
-    }
+	const writer = (content, message) =>
+		message && typeof message.reply === "function" &&
+		message.reply(content).catch(error);
+	const discordCM = new CommandManager({
+		writer: new Writer(writer),
+		feedback: new CommandFeedback({
+			commandNotFound: "Command `{label}` not found!"
+		})
+	});
+	discord.command = {
+		manager: discordCM
+	}
+	await discordCM.loadCommands(join(__src, "discord/commands"));
 }

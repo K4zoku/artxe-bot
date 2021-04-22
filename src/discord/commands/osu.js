@@ -5,7 +5,7 @@ const osuCmd = new Command({
     label: "osu",
     aliases: ["oxu", "o"],
     description: "Osu!Command",
-    usage: "osu <user | beatmap | mirror> [opts...]",
+    usage: "osu <user | beatmap | mirror | link> [opts...]",
     execute: execute,
     data: {
         modifier: 0x6,
@@ -72,7 +72,7 @@ async function execute(args, message) {
                 case "user":
                 case "u":
                     let pinfo = await playerInfo(args[0]);
-                    await channel.send(pinfo);
+                    await channel.send(pinfo || "Unknown player");
                     return !!pinfo;
                 case "beatmap":
                 case "bm":
@@ -168,11 +168,20 @@ Number.prototype.pad = function (n = 2) {
 }
 const formatJoinDate = joinDate => {
     let date = new Date(joinDate);
-    return `${date.getUTCFullYear()}-${(date.getUTCMonth()+1).pad()}-${date.getUTCDate().pad()} ${date.getUTCHours().pad()}:${date.getUTCMinutes().pad()}:${date.getUTCSeconds().pad()}`
+    return `${date.getUTCFullYear()}-${(date.getUTCMonth() + 1).pad()}-${date.getUTCDate().pad()} ${date.getUTCHours().pad()}:${date.getUTCMinutes().pad()}:${date.getUTCSeconds().pad()}`
 }
 
-async function playerInfo(player, mode=0) {
-    if ((player + "").indexOf("osu.ppy.sh") !== -1) {
+const formatNumber = n => typeof n === "number" ? n.toLocaleString("en-US") : n
+
+async function playerInfo(player, mode = 0) {
+    player = player + "";
+    let m;
+    if (!!(m = player.match(/<@!?(\d{17,19})>/))) {
+        let linked = await osu.getUser(m[1]);
+        if (linked.length === 0) return false;
+        let [{osu_id}] = linked;
+        player = osu_id;
+    } else if (player.indexOf("osu.ppy.sh") !== -1) {
         player = osu.parseLink(player).user_id;
     }
     if (!player) return false;
@@ -187,37 +196,46 @@ async function playerInfo(player, mode=0) {
     mode = osu.getModeId(p.playmode);
 
     let description = [
-        `**User**: ${p.username} (ID: ${p.id})`,
+        `**User**: ${p.username} (ID: [${p.id}](https://osu.ppy.sh/u/${p.id}))`,
         `**Joined Osu!:** ${formatJoinDate(p.join_date)}`,
-        `**Accuracy: ** ${p.statistics.hit_accuracy.toFixed(2)}%`,
+        `**Accuracy: ** ${p.statistics.hit_accuracy && p.statistics.hit_accuracy.toFixed(2)}%`,
         `**Level:** ${p.statistics.level.current}`,
         `**Total Play Time:** ${formatPlayTime(p.statistics.play_time)}`,
         "",
-        `**Ranked Score:** ${p.statistics.ranked_score.toLocaleString("en-US")}`,
-        `**Total Score:** ${p.statistics.total_score.toLocaleString("en-US")}`,
+        `**Ranked Score:** ${formatNumber(p.statistics.ranked_score)}`,
+        `**Total Score:** ${formatNumber(p.statistics.total_score)}`,
         `**PP:** ${Math.floor(p.statistics.pp).toLocaleString("en-US")}`,
-        `**Rank:** #${p.statistics.global_rank.toLocaleString("en-US")}`,
-        `**Country rank:** #${p.statistics.rank.country.toLocaleString("en-US")}`,
+        `**Rank:** #${formatNumber(p.statistics.global_rank)}`,
+        `**Country rank:** #${formatNumber(p.statistics.rank.country)}`,
         "",
-        `**Play Count:** ${p.statistics.play_count.toLocaleString("en-US")}`,
-        `**SS+ plays:** ${p.statistics.grade_counts.ssh.toLocaleString("en-US")}`,
-        `**SS plays:** ${p.statistics.grade_counts.ss.toLocaleString("en-US")}`,
-        `**S+ plays:** ${p.statistics.grade_counts.sh.toLocaleString("en-US")}`,
-        `**S plays:** ${p.statistics.grade_counts.s.toLocaleString("en-US")}`,
-        `**A plays:** ${p.statistics.grade_counts.a.toLocaleString("en-US")}`
+        `**Play Count:** ${formatNumber(p.statistics.play_count)}`,
+        `**SS+ plays:** ${formatNumber(p.statistics.grade_counts.ssh)}`,
+        `**SS plays:** ${formatNumber(p.statistics.grade_counts.ss)}`,
+        `**S+ plays:** ${formatNumber(p.statistics.grade_counts.sh)}`,
+        `**S plays:** ${formatNumber(p.statistics.grade_counts.s)}`,
+        `**A plays:** ${formatNumber(p.statistics.grade_counts.a)}`
     ].join("\n");
-    let avatar = await osu.getUserAvatar(p.id);
-    let img = `https://lemmmy.pw/osusig/sig.php?colour=hexff66aa&pp=2&countryrank&flagshadow&onlineindicator&xpbar&xpbarhex&uname=${encodeURI(p.username)}&mode=${mode}`;
-    img = await fetch(img).then(_ => _.buffer());
-    let name = p.id + ".png";
+    // const avatar = await osu.getUserAvatar(p.id);
+    if (p.avatar_url === "/images/layout/avatar-guest.png") p.avatar_url = "https://osu.ppy.sh" + p.avatar_url;
+    let color = (p.profile_colour ?? "#ff66aa").substr(1);
+    let img = new URL("https://lemmmy.pw/osusig/sig.php?countryrank&flagshadow&onlineindicator&xpbar&xpbarhex");
+    const params = Object.entries({
+        colour: "hex" + color,
+        pp: 2,
+        uname: p.username,
+        mode,
+    });
+    await params.forEach(([k, v]) => img.searchParams.append(k, v))
+    img = await fetch(img.toString()).then(_ => _.buffer());
+    const name = p.id + ".png";
     img = new MessageAttachment(img, name);
     return new MessageEmbed()
         .attachFiles([img])
-        .setColor(0xff66aa)
+        .setColor(parseInt(color, 16))
         .setDescription(description)
-        .setThumbnail(avatar)
+        .setThumbnail(p.avatar_url)
         .setImage("attachment://" + name)
-        .setAuthor(p.username, avatar, `https://osu.ppy.sh/users/${p.id}`)
+        .setAuthor(p.username, p.avatar_url, `https://osu.ppy.sh/users/${p.id}`)
         .setFooter(`Mode: ${osu.getModeName(mode)}`)
 }
 

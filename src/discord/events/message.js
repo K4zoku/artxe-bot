@@ -1,39 +1,42 @@
 const {hasMod, mods} = __("discord/modifiers");
-const {prefix} = config.discord;
-module.exports = new Event("message", async (message) => {
-    await listeners.find(l => l.filter(message)).listener(message);
-});
 
 let listeners = [
     {
-        listener: commandListener,
-        filter: msg => msg.content.startsWith(prefix)
+        listen: commandListener,
+        filter: message => message.author.id !== discord.client.user.id &&
+            config.discord.prefixes.some(prefix => message.content.startsWith(prefix)),
     },
     {
-        listener: simsimiListener,
-        filter: () => true
+        listen: simsimiListener,
+        filter: message => message.author.id !== discord.client.user.id &&
+            (
+                message.channel.type === "dm" ||
+                discord.simsimi.users.has(message.author.id) &&
+                discord.simsimi.users.get(message.author.id)
+            )
     },
+    {
+        listen: _ => {
+        },
+        filter: _ => true,
+    }
 ]
 
 discord.simsimi = {
     users: new Map()
 };
 
+const {reply} = __("app/simsimi");
 async function simsimiListener(message) {
-    const users = discord.simsimi.users;
-    const id = message.author.id;
-    if (!(users.has(id) && users.get(id))) return;
-    const {reply} = __("app/simsimi");
-    const sim = await reply(message.content);
-    message.reply(sim ?? "Wat r u saying?");
+    await message.reply(await reply(message.content) ?? "Wat r u saying?");
     // {allowedMentions: {repliedUser: false}}
 }
 
 async function commandListener(message) {
     const content = message.content;
-    if (!content.startsWith(prefix)) return false;
-    Logger.info(`User ${message.author.tag} issued bot command: ${content}`, {label: "Discord"});
-    let rawCommand = content.substr(prefix.length);
+    let prefix = config.discord.prefixes.find(p => message.content.startsWith(p));
+    let rawCommand = content.substr(prefix.length).trim();
+    Logger.info(`User ${message.author.tag} issued bot command: ${rawCommand}`, {label: "Discord"});
     await discord.command.manager.execute(rawCommand, message, commandValidate);
     Logger.info("Command executed!", {label: "Discord"});
     return true;
@@ -66,3 +69,16 @@ function commandValidate(command, message) {
     }
     return true;
 }
+
+const filter = (filter, data) => {
+    if (typeof filter !== "function") return false;
+    try {
+        return filter(data);
+    } catch (e) {
+        error(e);
+        return false;
+    }
+}
+module.exports = new Event("message", async (message) => {
+    await listeners.find(listener => filter(listener.filter, message)).listen(message);
+});
